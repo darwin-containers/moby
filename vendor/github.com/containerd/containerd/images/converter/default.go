@@ -26,10 +26,10 @@ import (
 
 	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/images"
+	"github.com/containerd/containerd/log"
 	"github.com/containerd/containerd/platforms"
 	"github.com/opencontainers/go-digest"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -123,7 +123,7 @@ func (c *defaultConverter) convert(ctx context.Context, cs content.Store, desc o
 			newDesc.Annotations = nil
 		}
 	}
-	logrus.WithField("old", desc).WithField("new", newDesc).Debugf("converted")
+	log.G(ctx).WithField("old", desc).WithField("new", newDesc).Debugf("converted")
 	return newDesc, nil
 }
 
@@ -432,11 +432,11 @@ func ConvertDockerMediaTypeToOCI(mt string) string {
 	case images.MediaTypeDockerSchema2LayerGzip:
 		return ocispec.MediaTypeImageLayerGzip
 	case images.MediaTypeDockerSchema2LayerForeignGzip:
-		return ocispec.MediaTypeImageLayerNonDistributableGzip
+		return ocispec.MediaTypeImageLayerNonDistributableGzip //nolint:staticcheck // deprecated
 	case images.MediaTypeDockerSchema2Layer:
 		return ocispec.MediaTypeImageLayer
 	case images.MediaTypeDockerSchema2LayerForeign:
-		return ocispec.MediaTypeImageLayerNonDistributable
+		return ocispec.MediaTypeImageLayerNonDistributable //nolint:staticcheck // deprecated
 	case images.MediaTypeDockerSchema2Config:
 		return ocispec.MediaTypeImageConfig
 	default:

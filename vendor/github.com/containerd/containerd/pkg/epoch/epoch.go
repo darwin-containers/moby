@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/containerd/containerd/log"
 )
 
 // SourceDateEpochEnv is the SOURCE_DATE_EPOCH env var.
@@ -37,12 +37,11 @@ func SourceDateEpoch() (*time.Time, error) {
 	if !ok || v == "" {
 		return nil, nil // not an error
 	}
-	i64, err := strconv.ParseInt(v, 10, 64)
+	t, err := ParseSourceDateEpoch(v)
 	if err != nil {
-		return nil, fmt.Errorf("invalid %s value %q: %w", SourceDateEpochEnv, v, err)
+		return nil, fmt.Errorf("invalid %s value: %w", SourceDateEpochEnv, err)
 	}
-	unix := time.Unix(i64, 0).UTC()
-	return &unix, nil
+	return t, nil
 }
 
 // SourceDateEpochOrNow returns the SOURCE_DATE_EPOCH time if available,
@@ -50,7 +49,7 @@ func SourceDateEpoch() (*time.Time, error) {
 func SourceDateEpochOrNow() time.Time {
 	epoch, err := SourceDateEpoch()
 	if err != nil {
-		logrus.WithError(err).Warnf("Invalid %s", SourceDateEpochEnv)
+		log.L.WithError(err).Warnf("Invalid %s", SourceDateEpochEnv)
 	}
 	if epoch != nil {
 		return *epoch
@@ -58,12 +57,26 @@ func SourceDateEpochOrNow() time.Time {
 	return time.Now().UTC()
 }
 
+// ParseSourceDateEpoch parses the given source date epoch, as *time.Time.
+// It returns an error if sourceDateEpoch is empty or not well-formatted.
+func ParseSourceDateEpoch(sourceDateEpoch string) (*time.Time, error) {
+	if sourceDateEpoch == "" {
+		return nil, fmt.Errorf("value is empty")
+	}
+	i64, err := strconv.ParseInt(sourceDateEpoch, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid value: %w", err)
+	}
+	unix := time.Unix(i64, 0).UTC()
+	return &unix, nil
+}
+
 // SetSourceDateEpoch sets the SOURCE_DATE_EPOCH env var.
 func SetSourceDateEpoch(tm time.Time) {
-	os.Setenv(SourceDateEpochEnv, fmt.Sprintf("%d", tm.Unix()))
+	_ = os.Setenv(SourceDateEpochEnv, fmt.Sprintf("%d", tm.Unix()))
 }
 
 // UnsetSourceDateEpoch unsets the SOURCE_DATE_EPOCH env var.
 func UnsetSourceDateEpoch() {
-	os.Unsetenv(SourceDateEpochEnv)
+	_ = os.Unsetenv(SourceDateEpochEnv)
 }

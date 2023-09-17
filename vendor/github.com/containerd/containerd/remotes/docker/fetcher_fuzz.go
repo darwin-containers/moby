@@ -25,8 +25,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-
-	refDocker "github.com/containerd/containerd/reference/docker"
+	"strconv"
 )
 
 func FuzzFetcher(data []byte) int {
@@ -37,7 +36,7 @@ func FuzzFetcher(data []byte) int {
 
 	s := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("content-range", fmt.Sprintf("bytes %d-%d/%d", 0, dataLen-1, dataLen))
-		rw.Header().Set("content-length", fmt.Sprintf("%d", dataLen))
+		rw.Header().Set("content-length", strconv.Itoa(dataLen))
 		rw.Write(data)
 	}))
 	defer s.Close()
@@ -72,10 +71,5 @@ func FuzzFetcher(data []byte) int {
 	if len(b) != len(expected) {
 		panic("len of request is not equal to len of expected but should be")
 	}
-	return 1
-}
-
-func FuzzParseDockerRef(data []byte) int {
-	_, _ = refDocker.ParseDockerRef(string(data))
 	return 1
 }

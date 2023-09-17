@@ -18,8 +18,10 @@ package mount
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
+	"github.com/containerd/containerd/api/types"
 	"github.com/containerd/continuity/fs"
 )
 
@@ -66,6 +68,18 @@ func UnmountMounts(mounts []Mount, target string, flags int) error {
 		}
 	}
 	return nil
+}
+
+// CanonicalizePath makes path absolute and resolves symlinks in it.
+// Path must exist.
+func CanonicalizePath(path string) (string, error) {
+	// Abs also does Clean, so we do not need to call it separately
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.EvalSymlinks(path)
 }
 
 // ReadOnly returns a boolean value indicating whether this mount has the "ro"
@@ -129,4 +143,34 @@ func readonlyOverlay(opt []string) []string {
 		}
 	}
 	return out
+}
+
+// ToProto converts from [Mount] to the containerd
+// APIs protobuf definition of a Mount.
+func ToProto(mounts []Mount) []*types.Mount {
+	apiMounts := make([]*types.Mount, len(mounts))
+	for i, m := range mounts {
+		apiMounts[i] = &types.Mount{
+			Type:    m.Type,
+			Source:  m.Source,
+			Target:  m.Target,
+			Options: m.Options,
+		}
+	}
+	return apiMounts
+}
+
+// FromProto converts from the protobuf definition [types.Mount] to
+// [Mount].
+func FromProto(mm []*types.Mount) []Mount {
+	mounts := make([]Mount, len(mm))
+	for i, m := range mm {
+		mounts[i] = Mount{
+			Type:    m.Type,
+			Source:  m.Source,
+			Target:  m.Target,
+			Options: m.Options,
+		}
+	}
+	return mounts
 }

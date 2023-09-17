@@ -22,25 +22,26 @@ import (
 	"time"
 
 	"github.com/containerd/containerd/api/types"
+	"github.com/containerd/containerd/mount"
 	"github.com/containerd/containerd/platforms"
 	"github.com/containerd/typeurl/v2"
 )
 
 type CreateOptions struct {
-	Rootfs []*types.Mount
+	Rootfs []mount.Mount
 	// Options are used to pass arbitrary options to the shim when creating a new sandbox.
 	// CRI will use this to pass PodSandboxConfig.
 	// Don't confuse this with Runtime options, which are passed at shim instance start
 	// to setup global shim configuration.
-	Options   typeurl.Any
-	NetNSPath string
+	Options     typeurl.Any
+	NetNSPath   string
+	Annotations map[string]string
 }
 
 type CreateOpt func(*CreateOptions) error
 
 // WithRootFS is used to create a sandbox with the provided rootfs mount
-// TODO: Switch to mount.Mount once target added
-func WithRootFS(m []*types.Mount) CreateOpt {
+func WithRootFS(m []mount.Mount) CreateOpt {
 	return func(co *CreateOptions) error {
 		co.Rootfs = m
 		return nil
@@ -64,6 +65,14 @@ func WithOptions(options any) CreateOpt {
 func WithNetNSPath(netNSPath string) CreateOpt {
 	return func(co *CreateOptions) error {
 		co.NetNSPath = netNSPath
+		return nil
+	}
+}
+
+// WithAnnotations sets the provided annotations for sandbox creation.
+func WithAnnotations(annotations map[string]string) CreateOpt {
+	return func(co *CreateOptions) error {
+		co.Annotations = annotations
 		return nil
 	}
 }
@@ -100,6 +109,8 @@ type Controller interface {
 	Status(ctx context.Context, sandboxID string, verbose bool) (ControllerStatus, error)
 	// Shutdown deletes and cleans all tasks and sandbox instance.
 	Shutdown(ctx context.Context, sandboxID string) error
+	// Metrics queries the sandbox for metrics.
+	Metrics(ctx context.Context, sandboxID string) (*types.Metric, error)
 }
 
 type ControllerInstance struct {

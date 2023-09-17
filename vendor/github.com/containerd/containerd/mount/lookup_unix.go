@@ -20,21 +20,23 @@ package mount
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/moby/sys/mountinfo"
 )
 
 // Lookup returns the mount info corresponds to the path.
 func Lookup(dir string) (Info, error) {
-	dir = filepath.Clean(dir)
-
-	m, err := mountinfo.GetMounts(mountinfo.ParentsFilter(dir))
+	resolvedDir, err := CanonicalizePath(dir)
 	if err != nil {
-		return Info{}, fmt.Errorf("failed to find the mount info for %q: %w", dir, err)
+		return Info{}, err
+	}
+
+	m, err := mountinfo.GetMounts(mountinfo.ParentsFilter(resolvedDir))
+	if err != nil {
+		return Info{}, fmt.Errorf("failed to find the mount info for %q: %w", resolvedDir, err)
 	}
 	if len(m) == 0 {
-		return Info{}, fmt.Errorf("failed to find the mount info for %q", dir)
+		return Info{}, fmt.Errorf("failed to find the mount info for %q", resolvedDir)
 	}
 
 	// find the longest matching mount point
