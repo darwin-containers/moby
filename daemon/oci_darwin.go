@@ -57,7 +57,9 @@ func (daemon *Daemon) createSpec(ctx context.Context, daemonCfg *configStore, c 
 	)
 	opts = append(opts,
 		withCommonOptions(daemon, &daemonCfg.Config, c),
+		withMounts(daemon, daemonCfg, c),
 		coci.WithAnnotations(c.HostConfig.Annotations),
+		WithUser(c),
 	)
 
 	if c.NoNewPrivileges {
@@ -85,4 +87,38 @@ func (daemon *Daemon) createSpec(ctx context.Context, daemonCfg *configStore, c 
 		Snapshotter: snapshotter,
 		SnapshotKey: snapshotKey,
 	}, &s, opts...)
+}
+
+// withMounts sets the container's mounts
+func withMounts(daemon *Daemon, daemonCfg *configStore, c *container.Container) coci.SpecOpts {
+	return func(ctx context.Context, _ coci.Client, _ *containers.Container, s *coci.Spec) (err error) {
+		if err := daemon.setupContainerMountsRoot(c); err != nil {
+			return err
+		}
+
+		if err := daemon.setupIPCDirs(c); err != nil {
+			return err
+		}
+
+		defer func() {
+			if err != nil {
+				daemon.cleanupSecretDir(c)
+			}
+		}()
+
+		if err := daemon.setupSecretDir(c); err != nil {
+			return err
+		}
+
+		mounts, err := daemon.setupMounts(c)
+		if err != nil {
+			return err
+		}
+
+		for _, m := range mounts {
+			s.Mounts = append(s.Mounts, specs.Mount{Destination: m.Destination, Source: m.Source, Type: "bind"})
+		}
+
+		return err
+	}
 }
