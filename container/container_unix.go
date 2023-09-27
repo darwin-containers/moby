@@ -4,6 +4,7 @@ package container // import "github.com/docker/docker/container"
 
 import (
 	"context"
+	"github.com/containerd/containerd/v2/core/mount"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -16,9 +17,9 @@ import (
 	mounttypes "github.com/docker/docker/api/types/mount"
 	swarmtypes "github.com/docker/docker/api/types/swarm"
 	volumemounts "github.com/docker/docker/volume/mounts"
-	"github.com/moby/sys/mount"
 	"github.com/opencontainers/selinux/go-selinux/label"
 	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -171,7 +172,7 @@ func (container *Container) UnmountIpcMount() error {
 	if shmPath == "" {
 		return nil
 	}
-	if err = mount.Unmount(shmPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+	if err = mount.Unmount(shmPath, unix.MNT_FORCE); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
 	return nil
@@ -245,7 +246,7 @@ func (container *Container) UnmountSecrets() error {
 		return err
 	}
 
-	return mount.RecursiveUnmount(p)
+	return mount.UnmountRecursive(p, unix.MNT_FORCE)
 }
 
 type conflictingUpdateOptions string
@@ -366,7 +367,7 @@ func (container *Container) DetachAndUnmount(volumeEventLog func(name string, ac
 	}
 
 	for _, mountPath := range mountPaths {
-		if err := mount.Unmount(mountPath); err != nil {
+		if err := mount.Unmount(mountPath, unix.MNT_FORCE); err != nil {
 			log.G(ctx).WithError(err).WithField("container", container.ID).
 				Warn("Unable to unmount")
 		}

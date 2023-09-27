@@ -21,6 +21,22 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// loadCLIPlatformConfig loads the platform specific CLI configuration
+func loadCLIPlatformConfig(conf *config.Config) error {
+	if conf.RemappedRoot == "" {
+		return nil
+	}
+
+	containerdNamespace, containerdPluginNamespace, err := daemon.RemapContainerdNamespaces(conf)
+	if err != nil {
+		return err
+	}
+	conf.ContainerdNamespace = containerdNamespace
+	conf.ContainerdPluginNamespace = containerdPluginNamespace
+
+	return nil
+}
+
 func getDefaultDaemonConfigDir() (string, error) {
 	if !honorXDG {
 		return "/etc/docker", nil

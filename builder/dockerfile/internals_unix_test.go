@@ -1,3 +1,5 @@
+//go:build unix
+
 package dockerfile // import "github.com/docker/docker/builder/dockerfile"
 
 import (

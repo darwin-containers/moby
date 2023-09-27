@@ -1,4 +1,4 @@
-//go:build linux || freebsd
+//go:build unix
 
 // Package local provides the default implementation for volumes. It
 // is used to mount data volume containers and directories local to
@@ -14,10 +14,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/containerd/containerd/v2/core/mount"
+	"github.com/containerd/continuity/fs"
 	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/quota"
 	units "github.com/docker/go-units"
-	"github.com/moby/sys/mount"
 	"github.com/moby/sys/mountinfo"
 	"github.com/pkg/errors"
 )
@@ -168,7 +169,12 @@ func (v *localVolume) mount() error {
 		return err
 	}
 
-	if err := mount.Mount(mountDevice, v.path, v.opts.MountType, mountOpts); err != nil {
+	m := mount.Mount{
+		Source:  mountDevice,
+		Type:    v.opts.MountType,
+		Options: []string{mountOpts},
+	}
+	if err := m.Mount(v.path); err != nil {
 		if password := getPassword(v.opts.MountOpts); password != "" {
 			err = errors.New(strings.Replace(err.Error(), "password="+password, "password=********", 1))
 		}
@@ -193,7 +199,7 @@ func (v *localVolume) postMount() error {
 
 func (v *localVolume) unmount() error {
 	if v.needsMount() {
-		if err := mount.Unmount(v.path); err != nil {
+		if err := mount.Unmount(v.path, 0); err != nil {
 			if mounted, mErr := mountinfo.Mounted(v.path); mounted || mErr != nil {
 				return errdefs.System(err)
 			}
@@ -231,6 +237,6 @@ func (v *localVolume) CreatedAt() (time.Time, error) {
 	if err != nil {
 		return time.Time{}, err
 	}
-	sec, nsec := fileInfo.Sys().(*syscall.Stat_t).Ctim.Unix()
-	return time.Unix(sec, nsec), nil
+	t := fs.StatCtime(fileInfo.Sys().(*syscall.Stat_t))
+	return time.Unix(t.Unix()), nil
 }

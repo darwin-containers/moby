@@ -3,6 +3,7 @@ package buildkit
 import (
 	"context"
 	"fmt"
+	containerd "github.com/containerd/containerd/v2/client"
 	"io"
 	"net"
 	"strconv"
@@ -10,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerd/containerd/platforms"
-	"github.com/containerd/containerd/remotes/docker"
+	"github.com/containerd/containerd/v2/core/remotes/docker"
+	"github.com/containerd/platforms"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/backend"
 	timetypes "github.com/docker/docker/api/types/time"
@@ -91,6 +92,7 @@ type Opt struct {
 	ApparmorProfile     string
 	UseSnapshotter      bool
 	Snapshotter         string
+	ContainerdClient    *containerd.Client
 	ContainerdAddress   string
 	ContainerdNamespace string
 }
@@ -389,9 +391,10 @@ func (b *Builder) Build(ctx context.Context, opt backend.BuildConfig) (*builder.
 	}
 
 	req := &controlapi.SolveRequest{
-		Ref:           id,
-		Exporter:      exporterName,
-		ExporterAttrs: exporterAttrs,
+		Ref: id,
+		Exporters: []*controlapi.Exporter{
+			&controlapi.Exporter{Type: exporterName, Attrs: exporterAttrs},
+		},
 		Frontend:      "dockerfile.v0",
 		FrontendAttrs: frontendAttrs,
 		Session:       opt.Options.SessionID,

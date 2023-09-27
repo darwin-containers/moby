@@ -45,8 +45,9 @@ func New(opt Opt) (exporter.Exporter, error) {
 	return im, nil
 }
 
-func (e *imageExporter) Resolve(ctx context.Context, opt map[string]string) (exporter.ExporterInstance, error) {
+func (e *imageExporter) Resolve(ctx context.Context, id int, opt map[string]string) (exporter.ExporterInstance, error) {
 	i := &imageExporterInstance{
+		id:            id,
 		imageExporter: e,
 	}
 	for k, v := range opt {
@@ -70,9 +71,14 @@ func (e *imageExporter) Resolve(ctx context.Context, opt map[string]string) (exp
 }
 
 type imageExporterInstance struct {
+	id int
 	*imageExporter
 	targetNames []distref.Named
 	meta        map[string][]byte
+}
+
+func (e *imageExporterInstance) ID() int {
+	return e.id
 }
 
 func (e *imageExporterInstance) Name() string {
@@ -83,7 +89,7 @@ func (e *imageExporterInstance) Config() *exporter.Config {
 	return exporter.NewConfig()
 }
 
-func (e *imageExporterInstance) Export(ctx context.Context, inp *exporter.Source, sessionID string) (map[string]string, exporter.DescriptorReference, error) {
+func (e *imageExporterInstance) Export(ctx context.Context, inp *exporter.Source, inlineCache exptypes.InlineCache, sessionID string) (map[string]string, exporter.DescriptorReference, error) {
 	if len(inp.Refs) > 1 {
 		return nil, nil, fmt.Errorf("exporting multiple references to image store is currently unsupported")
 	}
@@ -156,8 +162,21 @@ func (e *imageExporterInstance) Export(ctx context.Context, inp *exporter.Source
 	}
 
 	diffs, history = normalizeLayersAndHistory(diffs, history, ref)
-
-	config, err = patchImageConfig(config, diffs, history, inp.Metadata[exptypes.ExporterInlineCache])
+	var inlineCacheEntry *exptypes.InlineCacheEntry
+	if inlineCache != nil {
+		inlineCacheResult, err := inlineCache(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		if inlineCacheResult != nil {
+			if ref != nil {
+				inlineCacheEntry, _ = inlineCacheResult.FindRef(ref.ID())
+			} else {
+				inlineCacheEntry = inlineCacheResult.Ref
+			}
+		}
+	}
+	config, err = patchImageConfig(config, diffs, history, inlineCacheEntry)
 	if err != nil {
 		return nil, nil, err
 	}

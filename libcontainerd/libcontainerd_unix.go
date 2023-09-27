@@ -1,9 +1,11 @@
+//go:build !windows
+
 package libcontainerd // import "github.com/docker/docker/libcontainerd"
 
 import (
 	"context"
 
-	"github.com/containerd/containerd"
+	containerd "github.com/containerd/containerd/v2/client"
 	"github.com/docker/docker/libcontainerd/remote"
 	libcontainerdtypes "github.com/docker/docker/libcontainerd/types"
 )

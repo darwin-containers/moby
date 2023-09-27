@@ -29,10 +29,33 @@ func DefaultPathEnv(os string) string {
 
 // DefaultSpec returns the default spec used by docker for the current Platform
 func DefaultSpec() specs.Spec {
-	if runtime.GOOS == "windows" {
+	switch runtime.GOOS {
+	case "darwin":
+		return DefaultDarwinSpec()
+	case "windows":
 		return DefaultWindowsSpec()
+	default:
+		return DefaultLinuxSpec()
 	}
-	return DefaultLinuxSpec()
+}
+
+// DefaultWindowsSpec create a default spec for running Darwin containers
+func DefaultDarwinSpec() specs.Spec {
+	return specs.Spec{
+		Version: specs.Version,
+		Windows: &specs.Windows{},
+		Process: &specs.Process{},
+		Root:    &specs.Root{},
+		Linux:   &specs.Linux{},
+		Mounts: []specs.Mount{
+			{
+				Destination: "/dev",
+				Type:        "devfs",
+				Source:      "devfs",
+				Options:     []string{},
+			},
+		},
+	}
 }
 
 // DefaultWindowsSpec create a default spec for running Windows containers

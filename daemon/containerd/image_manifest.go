@@ -4,11 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/images"
-	containerdimages "github.com/containerd/containerd/images"
-	"github.com/containerd/containerd/platforms"
+	containerd "github.com/containerd/containerd/v2/client"
+	"github.com/containerd/containerd/v2/core/content"
+	"github.com/containerd/containerd/v2/core/images"
+	"github.com/containerd/platforms"
 	"github.com/docker/docker/errdefs"
 	"github.com/moby/buildkit/util/attestation"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
@@ -23,7 +22,7 @@ var (
 // walkImageManifests calls the handler for each locally present manifest in
 // the image. The image implements the containerd.Image interface, but all
 // operations act on the specific manifest instead of the index.
-func (i *ImageService) walkImageManifests(ctx context.Context, img containerdimages.Image, handler func(img *ImageManifest) error) error {
+func (i *ImageService) walkImageManifests(ctx context.Context, img images.Image, handler func(img *ImageManifest) error) error {
 	desc := img.Target
 
 	handleManifest := func(ctx context.Context, d ocispec.Descriptor) error {
@@ -37,11 +36,11 @@ func (i *ImageService) walkImageManifests(ctx context.Context, img containerdima
 		return handler(platformImg)
 	}
 
-	if containerdimages.IsManifestType(desc.MediaType) {
+	if images.IsManifestType(desc.MediaType) {
 		return handleManifest(ctx, desc)
 	}
 
-	if containerdimages.IsIndexType(desc.MediaType) {
+	if images.IsIndexType(desc.MediaType) {
 		return i.walkPresentChildren(ctx, desc, handleManifest)
 	}
 
@@ -57,8 +56,8 @@ type ImageManifest struct {
 	manifest *ocispec.Manifest
 }
 
-func (i *ImageService) NewImageManifest(ctx context.Context, img containerdimages.Image, manifestDesc ocispec.Descriptor) (*ImageManifest, error) {
-	if !containerdimages.IsManifestType(manifestDesc.MediaType) {
+func (i *ImageService) NewImageManifest(ctx context.Context, img images.Image, manifestDesc ocispec.Descriptor) (*ImageManifest, error) {
+	if !images.IsManifestType(manifestDesc.MediaType) {
 		return nil, errNotManifest
 	}
 
@@ -72,7 +71,7 @@ func (i *ImageService) NewImageManifest(ctx context.Context, img containerdimage
 	}, nil
 }
 
-func (im *ImageManifest) Metadata() containerdimages.Image {
+func (im *ImageManifest) Metadata() images.Image {
 	md := im.Image.Metadata()
 	md.Target = im.RealTarget
 	return md
@@ -124,7 +123,7 @@ func (im *ImageManifest) CheckContentAvailable(ctx context.Context) (bool, error
 	// The target is already a platform-specific manifest, so no need to match platform.
 	pm := platforms.All
 
-	available, _, _, missing, err := containerdimages.Check(ctx, im.ContentStore(), im.Target(), pm)
+	available, _, _, missing, err := images.Check(ctx, im.ContentStore(), im.Target(), pm)
 	if err != nil {
 		return false, err
 	}

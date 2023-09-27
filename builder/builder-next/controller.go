@@ -8,12 +8,12 @@ import (
 	"runtime"
 	"time"
 
-	ctd "github.com/containerd/containerd"
-	"github.com/containerd/containerd/content/local"
-	ctdmetadata "github.com/containerd/containerd/metadata"
-	"github.com/containerd/containerd/platforms"
-	"github.com/containerd/containerd/snapshots"
+	ctd "github.com/containerd/containerd/v2/client"
+	ctdmetadata "github.com/containerd/containerd/v2/core/metadata"
+	"github.com/containerd/containerd/v2/core/snapshots"
+	"github.com/containerd/containerd/v2/plugins/content/local"
 	"github.com/containerd/log"
+	"github.com/containerd/platforms"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/builder/builder-next/adapters/containerimage"
@@ -67,7 +67,7 @@ func newController(ctx context.Context, rt http.RoundTripper, opt Opt) (*control
 }
 
 func getTraceExporter(ctx context.Context) trace.SpanExporter {
-	exp, err := detect.Exporter()
+	exp, _, err := detect.Exporter()
 	if err != nil {
 		log.G(ctx).WithError(err).Error("Failed to detect trace exporter for buildkit controller")
 	}
@@ -105,7 +105,7 @@ func newSnapshotterController(ctx context.Context, rt http.RoundTripper, opt Opt
 	wo, err := containerd.NewWorkerOpt(opt.Root, opt.ContainerdAddress, opt.Snapshotter, opt.ContainerdNamespace,
 		opt.Rootless, map[string]string{
 			label.Snapshotter: opt.Snapshotter,
-		}, dns, nc, opt.ApparmorProfile, false, nil, "", ctd.WithTimeout(60*time.Second))
+		}, dns, nc, opt.ApparmorProfile, false, nil, "", &containerd.RuntimeInfo{Name: opt.ContainerdClient.Runtime()}, ctd.WithTimeout(60*time.Second))
 	if err != nil {
 		return nil, err
 	}
@@ -123,12 +123,6 @@ func newSnapshotterController(ctx context.Context, rt http.RoundTripper, opt Opt
 	wo.GCPolicy = policy
 	wo.RegistryHosts = opt.RegistryHosts
 	wo.Labels = getLabels(opt, wo.Labels)
-
-	exec, err := newExecutor(opt.Root, opt.DefaultCgroupParent, opt.NetworkController, dns, opt.Rootless, opt.IdentityMapping, opt.ApparmorProfile)
-	if err != nil {
-		return nil, err
-	}
-	wo.Executor = exec
 
 	w, err := mobyworker.NewContainerdWorker(ctx, wo)
 	if err != nil {
@@ -291,7 +285,7 @@ func newGraphDriverController(ctx context.Context, rt http.RoundTripper, opt Opt
 
 	dns := getDNSConfig(opt.DNSConfig)
 
-	exec, err := newExecutor(root, opt.DefaultCgroupParent, opt.NetworkController, dns, opt.Rootless, opt.IdentityMapping, opt.ApparmorProfile)
+	exec, err := newExecutor(root, opt.DefaultCgroupParent, opt.ContainerdClient, opt.NetworkController, dns, opt.Rootless, opt.IdentityMapping, opt.ApparmorProfile)
 	if err != nil {
 		return nil, err
 	}

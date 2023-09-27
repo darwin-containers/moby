@@ -1,3 +1,5 @@
+//go:build unix
+
 package remote // import "github.com/docker/docker/libcontainerd/remote"
 
 import (
@@ -7,9 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/cio"
-	"github.com/containerd/containerd/containers"
+	containerd "github.com/containerd/containerd/v2/client"
+	"github.com/containerd/containerd/v2/core/containers"
+	"github.com/containerd/containerd/v2/pkg/cio"
 	"github.com/containerd/log"
 	libcontainerdtypes "github.com/docker/docker/libcontainerd/types"
 	"github.com/docker/docker/pkg/idtools"

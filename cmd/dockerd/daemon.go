@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	containerddefaults "github.com/containerd/containerd/defaults"
-	"github.com/containerd/containerd/tracing"
+	containerddefaults "github.com/containerd/containerd/v2/defaults"
+	"github.com/containerd/containerd/v2/pkg/tracing"
 	"github.com/containerd/log"
 	"github.com/docker/docker/api"
 	apiserver "github.com/docker/docker/api/server"
@@ -242,7 +242,7 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 
 	// Override BuildKit's default Resource so that it matches the semconv
 	// version that is used in our code.
-	detect.Resource = resource.Default()
+	detect.OverrideResource(resource.Default())
 	detect.Recorder = detect.NewTraceRecorder()
 
 	tp, err := detect.TracerProvider()
@@ -426,6 +426,7 @@ func newRouterOptions(ctx context.Context, config *config.Config, d *daemon.Daem
 		ApparmorProfile:     daemon.DefaultApparmorProfile(),
 		UseSnapshotter:      d.UsesSnapshotter(),
 		Snapshotter:         d.ImageService().StorageDriver(),
+		ContainerdClient:    d.ContainerdClient(),
 		ContainerdAddress:   config.ContainerdAddr,
 		ContainerdNamespace: config.ContainerdNamespace,
 	})
