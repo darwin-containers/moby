@@ -1,3 +1,5 @@
+//go:build unix
+
 package remote // import "github.com/docker/docker/libcontainerd/remote"
 
 import (

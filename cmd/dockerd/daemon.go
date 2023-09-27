@@ -420,6 +420,7 @@ func newRouterOptions(ctx context.Context, config *config.Config, d *daemon.Daem
 		ApparmorProfile:     daemon.DefaultApparmorProfile(),
 		UseSnapshotter:      d.UsesSnapshotter(),
 		Snapshotter:         d.ImageService().StorageDriver(),
+		ContainerdClient:    d.ContainerdClient(),
 		ContainerdAddress:   config.ContainerdAddr,
 		ContainerdNamespace: config.ContainerdNamespace,
 	})

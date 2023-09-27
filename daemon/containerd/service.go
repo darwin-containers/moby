@@ -3,11 +3,11 @@ package containerd
 import (
 	"context"
 	"fmt"
+	"github.com/containerd/containerd/plugins"
 	"sync/atomic"
 
 	"github.com/containerd/containerd"
 	cerrdefs "github.com/containerd/containerd/errdefs"
-	"github.com/containerd/containerd/plugin"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/containerd/containerd/snapshots"
 	"github.com/containerd/log"
@@ -97,7 +97,7 @@ func (i *ImageService) CreateLayer(container *container.Container, initFunc laye
 func (i *ImageService) LayerStoreStatus() [][2]string {
 	// TODO(thaJeztah) do we want to add more details about the driver here?
 	return [][2]string{
-		{"driver-type", string(plugin.SnapshotPlugin)},
+		{"driver-type", string(plugins.SnapshotPlugin)},
 	}
 }
 

@@ -143,6 +143,10 @@ type Daemon struct {
 	usesSnapshotter bool
 }
 
+func (daemon *Daemon) ContainerdClient() *containerd.Client {
+	return daemon.containerdClient
+}
+
 // ID returns the daemon id
 func (daemon *Daemon) ID() string {
 	return daemon.id
@@ -942,6 +946,7 @@ func NewDaemon(ctx context.Context, config *config.Config, pluginStore *plugin.S
 	if cfgStore.ContainerdAddr != "" {
 		d.containerdClient, err = containerd.New(
 			cfgStore.ContainerdAddr,
+			containerd.WithDefaultRuntime(config.DefaultRuntime),
 			containerd.WithDefaultNamespace(cfgStore.ContainerdNamespace),
 			containerd.WithDialOpts(gopts),
 			containerd.WithTimeout(60*time.Second),

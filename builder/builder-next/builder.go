@@ -3,6 +3,7 @@ package buildkit
 import (
 	"context"
 	"fmt"
+	"github.com/containerd/containerd"
 	"io"
 	"net"
 	"strconv"
@@ -91,6 +92,7 @@ type Opt struct {
 	ApparmorProfile     string
 	UseSnapshotter      bool
 	Snapshotter         string
+	ContainerdClient    *containerd.Client
 	ContainerdAddress   string
 	ContainerdNamespace string
 }

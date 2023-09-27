@@ -118,6 +118,9 @@ type mounter struct {
 
 func (m mounter) Mount(mounts []mount.Mount, containerID string) (string, error) {
 	target := m.target(containerID)
+	if err := os.MkdirAll(target, 0o755); err != nil {
+		return "", err
+	}
 
 	root := m.idMap.RootPair()
 	if err := idtools.MkdirAllAndChown(filepath.Dir(target), 0o710, idtools.Identity{
