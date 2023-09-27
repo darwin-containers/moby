@@ -8,10 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/gc"
-	"github.com/containerd/containerd/leases"
-	ptypes "github.com/containerd/containerd/protobuf/types"
+	containerd "github.com/containerd/containerd/v2/client"
+	"github.com/containerd/containerd/v2/core/leases"
+	"github.com/containerd/containerd/v2/pkg/gc"
 	"github.com/containerd/platforms"
 	"github.com/moby/buildkit/cache"
 	"github.com/moby/buildkit/cache/metadata"
@@ -50,7 +49,7 @@ type WorkerOptions struct {
 // NewWorkerOpt creates a WorkerOpt.
 func NewWorkerOpt(
 	workerOpts WorkerOptions,
-	opts ...containerd.ClientOpt,
+	opts ...containerd.Opt,
 ) (base.WorkerOpt, error) {
 	opts = append(opts, containerd.WithDefaultNamespace(workerOpts.Namespace))
 
@@ -89,7 +88,7 @@ func newContainerd(client *containerd.Client, workerOpts WorkerOptions) (base.Wo
 		return base.WorkerOpt{}, err
 	}
 
-	serverInfo, err := client.IntrospectionService().Server(context.TODO(), &ptypes.Empty{})
+	serverInfo, err := client.IntrospectionService().Server(context.TODO())
 	if err != nil {
 		return base.WorkerOpt{}, err
 	}
@@ -131,7 +130,7 @@ func newContainerd(client *containerd.Client, workerOpts WorkerOptions) (base.Wo
 
 	cs := containerdsnapshot.NewContentStore(client.ContentStore(), workerOpts.Namespace)
 
-	resp, err := client.IntrospectionService().Plugins(context.TODO(), []string{"type==io.containerd.runtime.v1", "type==io.containerd.runtime.v2"})
+	resp, err := client.IntrospectionService().Plugins(context.TODO(), "type==io.containerd.runtime.v1", "type==io.containerd.runtime.v2")
 	if err != nil {
 		return base.WorkerOpt{}, errors.Wrap(err, "failed to list runtime plugin")
 	}

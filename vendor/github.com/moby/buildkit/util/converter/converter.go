@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/images/converter"
-	"github.com/containerd/containerd/labels"
-	cerrdefs "github.com/containerd/errdefs"
+	"github.com/containerd/containerd/v2/core/content"
+	"github.com/containerd/containerd/v2/core/images/converter"
+	"github.com/containerd/containerd/v2/pkg/labels"
+	"github.com/containerd/errdefs"
 	"github.com/moby/buildkit/identity"
 	"github.com/moby/buildkit/util/bklog"
 	"github.com/moby/buildkit/util/compression"
@@ -149,7 +149,7 @@ func (c *conversion) convert(ctx context.Context, cs content.Store, desc ocispec
 	if c.rewriteTimestamp != nil {
 		labelz[labelRewrittenTimestamp] = fmt.Sprintf("%d", c.rewriteTimestamp.UTC().Unix())
 	}
-	if err = w.Commit(ctx, 0, "", content.WithLabels(labelz)); err != nil && !cerrdefs.IsAlreadyExists(err) {
+	if err = w.Commit(ctx, 0, "", content.WithLabels(labelz)); err != nil && !errdefs.IsAlreadyExists(err) {
 		return nil, err
 	}
 	if err := w.Close(); err != nil {

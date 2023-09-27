@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerd/containerd"
+	ctd "github.com/containerd/containerd/v2/client"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/versions"
@@ -692,7 +692,7 @@ func TestContainerdContainerImageInfo(t *testing.T) {
 	})
 	defer apiClient.ContainerRemove(ctx, id, container.RemoveOptions{Force: true})
 
-	client, err := containerd.New(info.Containerd.Address, containerd.WithDefaultNamespace(info.Containerd.Namespaces.Containers))
+	client, err := ctd.New(info.Containerd.Address, ctd.WithDefaultNamespace(info.Containerd.Namespaces.Containers))
 	assert.NilError(t, err)
 	defer client.Close()
 

@@ -7,11 +7,11 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/containerd/containerd/diff"
-	"github.com/containerd/containerd/diff/walking"
-	"github.com/containerd/containerd/labels"
-	"github.com/containerd/containerd/leases"
-	"github.com/containerd/containerd/mount"
+	"github.com/containerd/containerd/v2/core/diff"
+	"github.com/containerd/containerd/v2/core/leases"
+	"github.com/containerd/containerd/v2/core/mount"
+	"github.com/containerd/containerd/v2/pkg/labels"
+	"github.com/containerd/containerd/v2/plugins/diff/walking"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/util/bklog"
 	"github.com/moby/buildkit/util/compression"
@@ -203,7 +203,7 @@ func computeBlobChain(ctx context.Context, sr *immutableRef, createIfNeeded bool
 				if desc.Digest == "" && !isTypeWindows(sr) && comp.Type.NeedsComputeDiffBySelf(comp) {
 					// These compression types aren't supported by containerd differ. So try to compute diff on buildkit side.
 					// This case can be happen on containerd worker + non-overlayfs snapshotter (e.g. native).
-					// See also: https://github.com/containerd/containerd/issues/4263
+					// See also: https://github.com/containerd/containerd/v2/issues/4263
 					desc, err = walking.NewWalkingDiff(sr.cm.ContentStore).Compare(ctx, lower, upper,
 						diff.WithMediaType(mediaType),
 						diff.WithReference(sr.ID()),

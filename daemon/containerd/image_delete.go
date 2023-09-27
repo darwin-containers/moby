@@ -6,8 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/containerd/containerd/images"
-	containerdimages "github.com/containerd/containerd/images"
+	"github.com/containerd/containerd/v2/core/images"
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/containerd/log"
 	"github.com/distribution/reference"
@@ -221,7 +220,7 @@ func (i *ImageService) deleteAll(ctx context.Context, imgID image.ID, all []imag
 		}
 	}()
 
-	var parents []containerdimages.Image
+	var parents []images.Image
 	if prune {
 		// TODO(dmcgowan): Consider using GC labels to walk for deletion
 		parents, err = i.parents(ctx, imgID)

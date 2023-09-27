@@ -1,4 +1,4 @@
-//go:build !linux && !windows && !freebsd
+//go:build !linux && !windows && !freebsd && !darwin
 
 package graphdriver // import "github.com/docker/docker/daemon/graphdriver"
 

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"github.com/gogo/googleapis/google/rpc"
 	"io"
 	"os"
 	"sort"
@@ -13,10 +14,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/leases"
-	cerrdefs "github.com/containerd/errdefs"
-	"github.com/gogo/googleapis/google/rpc"
+	"github.com/containerd/containerd/v2/core/content"
+	"github.com/containerd/containerd/v2/core/leases"
+	"github.com/containerd/errdefs"
 	controlapi "github.com/moby/buildkit/api/services/control"
 	"github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/cmd/buildkitd/config"
@@ -150,7 +150,7 @@ func (h *HistoryQueue) migrateV2() error {
 		return b.ForEach(func(key, dt []byte) error {
 			recs, err := h.opt.LeaseManager.ListResources(ctx, leases.Lease{ID: h.leaseID(string(key))})
 			if err != nil {
-				if cerrdefs.IsNotFound(err) {
+				if errdefs.IsNotFound(err) {
 					return nil
 				}
 				return err
@@ -170,7 +170,7 @@ func (h *HistoryQueue) migrateV2() error {
 
 			l, err := h.hLeaseManager.Create(ctx, leases.WithID(h.leaseID(string(key))))
 			if err != nil {
-				if !errors.Is(err, cerrdefs.ErrAlreadyExists) {
+				if !errors.Is(err, errdefs.ErrAlreadyExists) {
 					return err
 				}
 				l = leases.Lease{ID: string(key)}
@@ -255,7 +255,7 @@ func (h *HistoryQueue) migrateBlobV2(ctx context.Context, id string, detectSkipL
 		Digest: dgst,
 	}), content.WithRef("history-migrate-"+id))
 	if err != nil {
-		if cerrdefs.IsAlreadyExists(err) {
+		if errdefs.IsAlreadyExists(err) {
 			return true, nil
 		}
 		return false, err
@@ -378,7 +378,7 @@ func (h *HistoryQueue) addResource(ctx context.Context, l leases.Lease, desc *co
 		return nil
 	}
 	if _, err := h.hContentStore.Info(ctx, desc.Digest); err != nil {
-		if cerrdefs.IsNotFound(err) {
+		if errdefs.IsNotFound(err) {
 			lr, ctx, err := leaseutil.NewLease(ctx, h.hLeaseManager, leases.WithID("history_migration_"+identity.NewID()), leaseutil.MakeTemporary)
 			if err != nil {
 				return err
@@ -522,7 +522,7 @@ func (h *HistoryQueue) update(ctx context.Context, rec controlapi.BuildHistoryRe
 		l, err := h.hLeaseManager.Create(ctx, leases.WithID(h.leaseID(rec.Ref)))
 		created := true
 		if err != nil {
-			if !errors.Is(err, cerrdefs.ErrAlreadyExists) {
+			if !errors.Is(err, errdefs.ErrAlreadyExists) {
 				return err
 			}
 			l = leases.Lease{ID: h.leaseID(rec.Ref)}
@@ -695,7 +695,7 @@ func (w *Writer) Commit(ctx context.Context) (*ocispecs.Descriptor, func(), erro
 	dgst := w.dgstr.Digest()
 	sz := int64(w.sz)
 	if err := w.w.Commit(leases.WithLease(ctx, w.l.ID), int64(w.sz), dgst); err != nil {
-		if !cerrdefs.IsAlreadyExists(err) {
+		if !errdefs.IsAlreadyExists(err) {
 			w.Discard()
 			return nil, nil, err
 		}

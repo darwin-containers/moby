@@ -24,10 +24,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/defaults"
-	"github.com/containerd/containerd/pkg/dialer"
-	"github.com/containerd/containerd/remotes/docker"
+	containerd "github.com/containerd/containerd/v2/client"
+	"github.com/containerd/containerd/v2/core/remotes/docker"
+	"github.com/containerd/containerd/v2/defaults"
+	"github.com/containerd/containerd/v2/pkg/dialer"
 	"github.com/containerd/log"
 	"github.com/distribution/reference"
 	dist "github.com/docker/distribution"
@@ -154,6 +154,10 @@ type Daemon struct {
 	mdDB *bbolt.DB
 
 	usesSnapshotter bool
+}
+
+func (daemon *Daemon) ContainerdClient() *containerd.Client {
+	return daemon.containerdClient
 }
 
 // ID returns the daemon id
@@ -1011,6 +1015,7 @@ func NewDaemon(ctx context.Context, config *config.Config, pluginStore *plugin.S
 	if cfgStore.ContainerdAddr != "" {
 		d.containerdClient, err = containerd.New(
 			cfgStore.ContainerdAddr,
+			containerd.WithDefaultRuntime(config.DefaultRuntime),
 			containerd.WithDefaultNamespace(cfgStore.ContainerdNamespace),
 			containerd.WithDialOpts(gopts),
 			containerd.WithTimeout(60*time.Second),
@@ -1129,7 +1134,7 @@ func NewDaemon(ctx context.Context, config *config.Config, pluginStore *plugin.S
 
 		// FIXME(thaJeztah): implement automatic snapshotter-selection similar to graph-driver selection; see https://github.com/moby/moby/issues/44076
 		if driverName == "" {
-			driverName = containerd.DefaultSnapshotter
+			driverName = defaults.DefaultSnapshotter
 		}
 
 		// Configure and validate the kernels security support. Note this is a Linux/FreeBSD

@@ -16,8 +16,8 @@ import (
 	"time"
 
 	"github.com/Microsoft/hcsshim"
-	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/cio"
+	containerd "github.com/containerd/containerd/v2/client"
+	"github.com/containerd/containerd/v2/pkg/cio"
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/containerd/log"
 	"github.com/docker/docker/errdefs"
@@ -941,7 +941,7 @@ func (t *task) Summary(_ context.Context) ([]libcontainerdtypes.Summary, error) 
 	for i := range p {
 		pl[i] = libcontainerdtypes.Summary{
 			ImageName:                    p[i].ImageName,
-			CreatedAt:                    p[i].CreateTimestamp,
+			CreatedAt:                    protobuf.ToTimestamp(p[i].CreateTimestamp),
 			KernelTime_100Ns:             p[i].KernelTime100ns,
 			MemoryCommitBytes:            p[i].MemoryCommitBytes,
 			MemoryWorkingSetPrivateBytes: p[i].MemoryWorkingSetPrivateBytes,

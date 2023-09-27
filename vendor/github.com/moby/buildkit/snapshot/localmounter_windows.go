@@ -4,8 +4,8 @@ import (
 	"os"
 
 	"github.com/Microsoft/go-winio/pkg/bindfilter"
-	"github.com/containerd/containerd/mount"
-	cerrdefs "github.com/containerd/errdefs"
+	"github.com/containerd/containerd/v2/core/mount"
+	"github.com/containerd/errdefs"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/windows"
 )

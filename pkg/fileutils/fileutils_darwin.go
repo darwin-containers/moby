@@ -2,6 +2,7 @@ package fileutils // import "github.com/docker/docker/pkg/fileutils"
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"os/exec"
 	"strconv"
@@ -15,7 +16,7 @@ import (
 // names. See [LSOF(8)].
 //
 // [LSOF(8)]: https://opensource.apple.com/source/lsof/lsof-49/lsof/lsof.man.auto.html
-func GetTotalUsedFds() int {
+func GetTotalUsedFds(ctx context.Context) int {
 	output, err := exec.Command("lsof", "-lnP", "-Ff", "-p", strconv.Itoa(os.Getpid())).CombinedOutput()
 	if err != nil {
 		return -1

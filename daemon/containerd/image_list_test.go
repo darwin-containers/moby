@@ -12,12 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/images"
-	"github.com/containerd/containerd/metadata"
-	"github.com/containerd/containerd/namespaces"
-	"github.com/containerd/containerd/snapshots"
+	ctd "github.com/containerd/containerd/v2/client"
+	"github.com/containerd/containerd/v2/core/content"
+	"github.com/containerd/containerd/v2/core/images"
+	"github.com/containerd/containerd/v2/core/metadata"
+	"github.com/containerd/containerd/v2/core/snapshots"
+	"github.com/containerd/containerd/v2/defaults"
+	"github.com/containerd/containerd/v2/pkg/namespaces"
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/containerd/log/logtest"
 	"github.com/containerd/platforms"
@@ -296,7 +297,7 @@ func fakeImageService(t testing.TB, ctx context.Context, cs content.Store) *Imag
 	mdb := newTestDB(ctx, t)
 
 	snapshotters := map[string]snapshots.Snapshotter{
-		containerd.DefaultSnapshotter: snapshotter,
+		defaults.DefaultSnapshotter: snapshotter,
 	}
 
 	service := &ImageService{
@@ -305,15 +306,15 @@ func fakeImageService(t testing.TB, ctx context.Context, cs content.Store) *Imag
 		content:             cs,
 		eventsService:       daemonevents.New(),
 		snapshotterServices: snapshotters,
-		snapshotter:         containerd.DefaultSnapshotter,
+		snapshotter:         defaults.DefaultSnapshotter,
 	}
 
 	// containerd.Image gets the services directly from containerd.Client
 	// so we need to create a "fake" containerd.Client with the test services.
-	c8dCli, err := containerd.New("", containerd.WithServices(
-		containerd.WithImageStore(service.images),
-		containerd.WithContentStore(cs),
-		containerd.WithSnapshotters(snapshotters),
+	c8dCli, err := ctd.New("", ctd.WithServices(
+		ctd.WithImageStore(service.images),
+		ctd.WithContentStore(cs),
+		ctd.WithSnapshotters(snapshotters),
 	))
 	assert.NilError(t, err)
 

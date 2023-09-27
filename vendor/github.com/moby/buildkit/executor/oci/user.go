@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/containerd/containerd/containers"
-	containerdoci "github.com/containerd/containerd/oci"
+	"github.com/containerd/containerd/v2/core/containers"
+	containerdoci "github.com/containerd/containerd/v2/pkg/oci"
 	"github.com/containerd/continuity/fs"
 	"github.com/moby/sys/user"
 	specs "github.com/opencontainers/runtime-spec/specs-go"
@@ -109,7 +109,7 @@ func setProcess(s *containerdoci.Spec) {
 }
 
 // ensureAdditionalGids ensures that the primary GID is also included in the additional GID list.
-// From https://github.com/containerd/containerd/blob/v1.7.0-beta.4/oci/spec_opts.go#L124-L133
+// From https://github.com/containerd/containerd/v2/blob/v1.7.0-beta.4/oci/spec_opts.go#L124-L133
 func ensureAdditionalGids(s *containerdoci.Spec) {
 	setProcess(s)
 	for _, f := range s.Process.User.AdditionalGids {

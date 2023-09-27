@@ -1,4 +1,4 @@
-//go:build !windows
+//go:build unix && !darwin
 
 package runconfig // import "github.com/docker/docker/runconfig"
 

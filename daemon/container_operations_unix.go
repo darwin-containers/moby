@@ -1,4 +1,4 @@
-//go:build linux || freebsd
+//go:build unix
 
 package daemon // import "github.com/docker/docker/daemon"
 
@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"syscall"
 
+	"github.com/containerd/containerd/v2/core/mount"
 	"github.com/containerd/log"
 	"github.com/docker/docker/container"
 	"github.com/docker/docker/daemon/config"
@@ -20,7 +21,6 @@ import (
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/docker/docker/pkg/process"
 	"github.com/docker/docker/pkg/stringid"
-	"github.com/moby/sys/mount"
 	"github.com/opencontainers/selinux/go-selinux/label"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
@@ -177,6 +177,7 @@ func (daemon *Daemon) setupIPCDirs(ctr *container.Container) error {
 				return err
 			}
 
+			/* TODO: Darwin
 			shmproperty := "mode=1777,size=" + strconv.FormatInt(ctr.HostConfig.ShmSize, 10)
 			if err := unix.Mount("shm", shmPath, "tmpfs", uintptr(unix.MS_NOEXEC|unix.MS_NOSUID|unix.MS_NODEV), label.FormatMountLabel(shmproperty, ctr.GetMountLabel())); err != nil {
 				return fmt.Errorf("mounting shm tmpfs: %s", err)
@@ -184,6 +185,8 @@ func (daemon *Daemon) setupIPCDirs(ctr *container.Container) error {
 			if err := os.Chown(shmPath, rootIDs.UID, rootIDs.GID); err != nil {
 				return err
 			}
+			*/
+
 			ctr.ShmPath = shmPath
 		}
 
@@ -330,10 +333,12 @@ func (daemon *Daemon) createSecretsDir(ctr *container.Container) error {
 		return errors.Wrap(err, "error creating secret local mount path")
 	}
 
-	tmpfsOwnership := fmt.Sprintf("uid=%d,gid=%d", rootIDs.UID, rootIDs.GID)
+	// TODO: macos
+
+	/*tmpfsOwnership := fmt.Sprintf("uid=%d,gid=%d", rootIDs.UID, rootIDs.GID)
 	if err := mount.Mount("tmpfs", dir, "tmpfs", "nodev,nosuid,noexec,"+tmpfsOwnership); err != nil {
 		return errors.Wrap(err, "unable to setup secret mount")
-	}
+	}*/
 	return nil
 }
 
@@ -345,13 +350,16 @@ func (daemon *Daemon) remountSecretDir(ctr *container.Container) error {
 	if err := label.Relabel(dir, ctr.MountLabel, false); err != nil {
 		log.G(context.TODO()).WithError(err).WithField("dir", dir).Warn("Error while attempting to set selinux label")
 	}
-	rootIDs := daemon.idMapping.RootPair()
+
+	// TODO: macos
+
+	/*rootIDs := daemon.idMapping.RootPair()
 	tmpfsOwnership := fmt.Sprintf("uid=%d,gid=%d", rootIDs.UID, rootIDs.GID)
 
 	// remount secrets ro
 	if err := mount.Mount("tmpfs", dir, "tmpfs", "remount,ro,"+tmpfsOwnership); err != nil {
 		return errors.Wrap(err, "unable to remount dir as readonly")
-	}
+	}*/
 
 	return nil
 }
@@ -361,7 +369,7 @@ func (daemon *Daemon) cleanupSecretDir(ctr *container.Container) {
 	if err != nil {
 		log.G(context.TODO()).WithError(err).WithField("container", ctr.ID).Warn("error getting secrets mount path for container")
 	}
-	if err := mount.RecursiveUnmount(dir); err != nil {
+	if err := mount.UnmountRecursive(dir, 0); err != nil {
 		log.G(context.TODO()).WithField("dir", dir).WithError(err).Warn("Error while attempting to unmount dir, this may prevent removal of container.")
 	}
 	if err := os.RemoveAll(dir); err != nil {

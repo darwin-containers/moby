@@ -10,12 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/diff"
-	"github.com/containerd/containerd/leases"
-	"github.com/containerd/containerd/mount"
-	"github.com/containerd/containerd/pkg/cleanup"
-	"github.com/containerd/containerd/snapshots"
+	"github.com/containerd/containerd/v2/core/content"
+	"github.com/containerd/containerd/v2/core/diff"
+	"github.com/containerd/containerd/v2/core/leases"
+	"github.com/containerd/containerd/v2/core/mount"
+	"github.com/containerd/containerd/v2/core/snapshots"
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/containerd/log"
 	"github.com/docker/docker/api/types/backend"
@@ -27,6 +26,30 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 )
+
+type clearCancel struct {
+	context.Context
+}
+
+func (cc clearCancel) Deadline() (deadline time.Time, ok bool) {
+	return
+}
+
+func (cc clearCancel) Done() <-chan struct{} {
+	return nil
+}
+
+func (cc clearCancel) Err() error {
+	return nil
+}
+
+// Do runs the provided function with a context in which the
+// errors are cleared out and will timeout after 10 seconds.
+func doCleanup(ctx context.Context, do func(context.Context)) {
+	ctx, cancel := context.WithTimeout(clearCancel{ctx}, 10*time.Second)
+	do(ctx)
+	cancel()
+}
 
 /*
 This code is based on `commit` support in nerdctl, under Apache License
@@ -205,7 +228,7 @@ func (i *ImageService) createDiff(ctx context.Context, name string, sn snapshots
 			if err != nil {
 				return nil, "", err
 			}
-			defer cleanup.Do(ctx, func(ctx context.Context) {
+			defer doCleanup(ctx, func(ctx context.Context) {
 				sn.Remove(ctx, upperKey)
 			})
 		}
@@ -216,7 +239,7 @@ func (i *ImageService) createDiff(ctx context.Context, name string, sn snapshots
 	if err != nil {
 		return nil, "", err
 	}
-	defer cleanup.Do(ctx, func(ctx context.Context) {
+	defer doCleanup(ctx, func(ctx context.Context) {
 		sn.Remove(ctx, lowerKey)
 	})
 

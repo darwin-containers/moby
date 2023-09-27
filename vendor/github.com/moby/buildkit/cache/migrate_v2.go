@@ -6,11 +6,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/images"
-	"github.com/containerd/containerd/leases"
-	"github.com/containerd/containerd/snapshots"
-	cerrdefs "github.com/containerd/errdefs"
+	"github.com/containerd/containerd/v2/core/content"
+	"github.com/containerd/containerd/v2/core/images"
+	"github.com/containerd/containerd/v2/core/leases"
+	"github.com/containerd/containerd/v2/core/snapshots"
+	"github.com/containerd/errdefs"
 	"github.com/moby/buildkit/cache/metadata"
 	"github.com/moby/buildkit/snapshot"
 	"github.com/moby/buildkit/util/bklog"
@@ -185,7 +185,7 @@ func MigrateV2(ctx context.Context, from, to string, cs content.Store, s snapsho
 		})
 		if err != nil {
 			// if we are running the migration twice
-			if errors.Is(err, cerrdefs.ErrAlreadyExists) {
+			if errors.Is(err, errdefs.ErrAlreadyExists) {
 				continue
 			}
 			return errors.Wrap(err, "failed to create lease")
@@ -216,7 +216,7 @@ func MigrateV2(ctx context.Context, from, to string, cs content.Store, s snapsho
 			if _, err := s.Update(ctx, snapshots.Info{
 				Name: md.getSnapshotID(),
 			}, "labels.containerd.io/gc.root"); err != nil {
-				if !errors.Is(err, cerrdefs.ErrNotFound) {
+				if !errors.Is(err, errdefs.ErrNotFound) {
 					return err
 				}
 			}
@@ -237,7 +237,7 @@ func MigrateV2(ctx context.Context, from, to string, cs content.Store, s snapsho
 			if _, err := s.Update(ctx, snapshots.Info{
 				Name: info.Name,
 			}, "labels.containerd.io/gc.root"); err != nil {
-				if !errors.Is(err, cerrdefs.ErrNotFound) {
+				if !errors.Is(err, errdefs.ErrNotFound) {
 					return err
 				}
 			}

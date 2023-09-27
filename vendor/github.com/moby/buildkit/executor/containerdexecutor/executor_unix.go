@@ -5,12 +5,12 @@ package containerdexecutor
 
 import (
 	"context"
+	containerd "github.com/containerd/containerd/v2/client"
 	"os"
 	"runtime"
 
-	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/mount"
-	containerdoci "github.com/containerd/containerd/oci"
+	"github.com/containerd/containerd/v2/core/mount"
+	containerdoci "github.com/containerd/containerd/v2/pkg/oci"
 	"github.com/containerd/continuity/fs"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/moby/buildkit/executor"

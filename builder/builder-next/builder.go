@@ -10,7 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerd/containerd/remotes/docker"
+	containerd "github.com/containerd/containerd/v2/client"
+	"github.com/containerd/containerd/v2/core/remotes/docker"
 	"github.com/containerd/platforms"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/backend"
@@ -92,6 +93,7 @@ type Opt struct {
 	ApparmorProfile     string
 	UseSnapshotter      bool
 	Snapshotter         string
+	ContainerdClient    *containerd.Client
 	ContainerdAddress   string
 	ContainerdNamespace string
 	Callbacks           exporter.BuildkitCallbacks
