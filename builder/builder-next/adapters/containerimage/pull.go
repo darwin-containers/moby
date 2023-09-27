@@ -13,17 +13,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerd/containerd/content"
-	cerrdefs "github.com/containerd/containerd/errdefs"
-	"github.com/containerd/containerd/gc"
-	"github.com/containerd/containerd/images"
-	"github.com/containerd/containerd/leases"
-	"github.com/containerd/containerd/platforms"
-	cdreference "github.com/containerd/containerd/reference"
-	ctdreference "github.com/containerd/containerd/reference"
-	"github.com/containerd/containerd/remotes"
-	"github.com/containerd/containerd/remotes/docker"
-	"github.com/containerd/containerd/remotes/docker/schema1" //nolint:staticcheck // Ignore SA1019: "github.com/containerd/containerd/remotes/docker/schema1" is deprecated: use images formatted in Docker Image Manifest v2, Schema 2, or OCI Image Spec v1.
+	"github.com/containerd/containerd/v2/content"
+	cerrdefs "github.com/containerd/containerd/v2/errdefs"
+	"github.com/containerd/containerd/v2/gc"
+	"github.com/containerd/containerd/v2/images"
+	"github.com/containerd/containerd/v2/leases"
+	"github.com/containerd/containerd/v2/platforms"
+	cdreference "github.com/containerd/containerd/v2/reference"
+	"github.com/containerd/containerd/v2/remotes"
+	"github.com/containerd/containerd/v2/remotes/docker"
+	"github.com/containerd/containerd/v2/remotes/docker/schema1" //nolint:staticcheck // Ignore SA1019: "github.com/containerd/containerd/v2/remotes/docker/schema1" is deprecated: use images formatted in Docker Image Manifest v2, Schema 2, or OCI Image Spec v1.
 	"github.com/containerd/log"
 	distreference "github.com/distribution/reference"
 	dimages "github.com/docker/docker/daemon/images"
@@ -673,7 +672,7 @@ type layerDescriptor struct {
 	fetcher remotes.Fetcher
 	desc    ocispec.Descriptor
 	diffID  layer.DiffID
-	ref     ctdreference.Spec
+	ref     cdreference.Spec
 }
 
 func (ld *layerDescriptor) Key() string {

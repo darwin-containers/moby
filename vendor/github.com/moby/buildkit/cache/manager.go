@@ -8,12 +8,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/diff"
-	"github.com/containerd/containerd/errdefs"
-	"github.com/containerd/containerd/filters"
-	"github.com/containerd/containerd/gc"
-	"github.com/containerd/containerd/leases"
+	"github.com/containerd/containerd/v2/content"
+	"github.com/containerd/containerd/v2/diff"
+	"github.com/containerd/containerd/v2/errdefs"
+	"github.com/containerd/containerd/v2/filters"
+	"github.com/containerd/containerd/v2/gc"
+	"github.com/containerd/containerd/v2/labels"
+	"github.com/containerd/containerd/v2/leases"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/moby/buildkit/cache/metadata"
 	"github.com/moby/buildkit/client"
@@ -300,7 +301,7 @@ func (cm *cacheManager) GetByBlob(ctx context.Context, desc ocispecs.Descriptor,
 
 	ref := rec.ref(true, descHandlers, nil)
 	if s := unlazySessionOf(opts...); s != nil {
-		if err := ref.unlazy(ctx, ref.descHandlers, ref.progress, s, true); err != nil {
+		if err := ref.unlazy(ctx, ref.descHandlers, ref.progress, s, true, false); err != nil {
 			return nil, err
 		}
 	}
@@ -321,6 +322,7 @@ func (cm *cacheManager) init(ctx context.Context) error {
 			bklog.G(ctx).Debugf("could not load snapshot %s: %+v", si.ID(), err)
 			cm.MetadataStore.Clear(si.ID())
 			cm.LeaseManager.Delete(ctx, leases.Lease{ID: si.ID()})
+			cm.LeaseManager.Delete(ctx, leases.Lease{ID: si.ID() + "-variants"})
 		}
 	}
 	return nil
@@ -1657,7 +1659,7 @@ func sortDeleteRecords(toDelete []*deleteRecord) {
 }
 
 func diffIDFromDescriptor(desc ocispecs.Descriptor) (digest.Digest, error) {
-	diffIDStr, ok := desc.Annotations["containerd.io/uncompressed"]
+	diffIDStr, ok := desc.Annotations[labels.LabelUncompressed]
 	if !ok {
 		return "", errors.Errorf("missing uncompressed annotation for %s", desc.Digest)
 	}

@@ -4,7 +4,7 @@ import (
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 
-	"github.com/containerd/containerd/platforms"
+	"github.com/containerd/containerd/v2/platforms"
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
 )
 

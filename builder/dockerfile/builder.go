@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/containerd/containerd/platforms"
+	"github.com/containerd/containerd/v2/platforms"
 	"github.com/containerd/log"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/backend"

@@ -2,7 +2,7 @@ package config // import "github.com/docker/docker/daemon/config"
 
 import (
 	"context"
-	"github.com/containerd/containerd/defaults"
+	"github.com/containerd/containerd/v2/defaults"
 	"github.com/containerd/log"
 	"github.com/docker/docker/api/types/system"
 )
@@ -12,8 +12,14 @@ const (
 )
 
 type BridgeConfig struct {
+	DefaultBridgeConfig
+}
+
+type DefaultBridgeConfig struct {
 	commonBridgeConfig
 
+	// MTU is not actually used on Windows, but the --mtu option has always
+	// been there on Windows (but ignored).
 	MTU int `json:"mtu,omitempty"`
 }
 

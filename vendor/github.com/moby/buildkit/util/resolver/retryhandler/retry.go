@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/containerd/containerd/images"
-	remoteserrors "github.com/containerd/containerd/remotes/errors"
+	"github.com/containerd/containerd/v2/images"
+	remoteserrors "github.com/containerd/containerd/v2/remotes/errors"
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 )
@@ -67,7 +67,7 @@ func retryError(err error) bool {
 	if ne, ok := errors.Cause(err).(net.Error); ok && ne.Temporary() { //nolint:staticcheck // ignoring "SA1019: Temporary is deprecated", continue to propagate net.Error through the "temporary" status
 		return true
 	}
-	// https://github.com/containerd/containerd/pull/4724
+	// https://github.com/containerd/containerd/v2/pull/4724
 	if errors.Cause(err).Error() == "no response" {
 		return true
 	}

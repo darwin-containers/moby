@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/containerd/containerd/mount"
+	"github.com/containerd/containerd/v2/mount"
 	"github.com/pkg/errors"
 )
 

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	coci "github.com/containerd/containerd/oci"
+	coci "github.com/containerd/containerd/v2/oci"
 	"github.com/containerd/log"
 	containertypes "github.com/docker/docker/api/types/container"
 	imagetypes "github.com/docker/docker/api/types/image"

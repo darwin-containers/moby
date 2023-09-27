@@ -4,13 +4,14 @@ import (
 	"context"
 	"sync"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/images"
-	"github.com/containerd/containerd/platforms"
-	"github.com/containerd/containerd/reference"
-	"github.com/containerd/containerd/remotes"
-	"github.com/containerd/containerd/remotes/docker"
-	"github.com/containerd/containerd/remotes/docker/schema1" //nolint:staticcheck // SA1019 deprecated
+	"github.com/containerd/containerd/v2/content"
+	"github.com/containerd/containerd/v2/images"
+	"github.com/containerd/containerd/v2/labels"
+	"github.com/containerd/containerd/v2/platforms"
+	"github.com/containerd/containerd/v2/reference"
+	"github.com/containerd/containerd/v2/remotes"
+	"github.com/containerd/containerd/v2/remotes/docker"
+	"github.com/containerd/containerd/v2/remotes/docker/schema1" //nolint:staticcheck // SA1019 deprecated
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/util/contentutil"
 	"github.com/moby/buildkit/util/flightcontrol"
@@ -273,7 +274,7 @@ func getLayers(ctx context.Context, provider content.Provider, desc ocispecs.Des
 		if desc.Annotations == nil {
 			desc.Annotations = map[string]string{}
 		}
-		desc.Annotations["containerd.io/uncompressed"] = diffIDs[i].String()
+		desc.Annotations[labels.LabelUncompressed] = diffIDs[i].String()
 		layers[i] = desc
 	}
 	return layers, nil

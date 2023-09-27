@@ -2,9 +2,9 @@ package shimopts
 
 import (
 	runhcsoptions "github.com/Microsoft/hcsshim/cmd/containerd-shim-runhcs-v1/options"
-	runtimeoptions "github.com/containerd/containerd/pkg/runtimeoptions/v1"
-	"github.com/containerd/containerd/plugins"
-	runcoptions "github.com/containerd/containerd/runtime/v2/runc/options"
+	runtimeoptions "github.com/containerd/containerd/v2/pkg/runtimeoptions/v1"
+	"github.com/containerd/containerd/v2/plugins"
+	runcoptions "github.com/containerd/containerd/v2/runtime/v2/runc/options"
 	"github.com/pelletier/go-toml"
 )
 

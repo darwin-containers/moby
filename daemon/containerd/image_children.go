@@ -3,10 +3,10 @@ package containerd
 import (
 	"context"
 
-	"github.com/containerd/containerd/content"
-	cerrdefs "github.com/containerd/containerd/errdefs"
-	containerdimages "github.com/containerd/containerd/images"
-	"github.com/containerd/containerd/platforms"
+	"github.com/containerd/containerd/v2/content"
+	cerrdefs "github.com/containerd/containerd/v2/errdefs"
+	containerdimages "github.com/containerd/containerd/v2/images"
+	"github.com/containerd/containerd/v2/platforms"
 	"github.com/containerd/log"
 	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/image"

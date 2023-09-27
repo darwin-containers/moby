@@ -4,7 +4,7 @@ package container // import "github.com/docker/docker/container"
 
 import (
 	"context"
-	"github.com/containerd/containerd/mount"
+	"github.com/containerd/containerd/v2/mount"
 	"os"
 	"path/filepath"
 	"syscall"

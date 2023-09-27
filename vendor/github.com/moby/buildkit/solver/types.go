@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/containerd/containerd/content"
+	"github.com/containerd/containerd/v2/content"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/solver/pb"
 	"github.com/moby/buildkit/util/compression"
@@ -226,6 +226,17 @@ type CacheRecord struct {
 
 	cacheManager *cacheManager
 	key          *CacheKey
+}
+
+func (ck *CacheRecord) TraceFields() map[string]any {
+	return map[string]any{
+		"id":            ck.ID,
+		"size":          ck.Size,
+		"createdAt":     ck.CreatedAt,
+		"priority":      ck.Priority,
+		"cache_manager": ck.cacheManager.ID(),
+		"cache_key":     ck.key.TraceFields(),
+	}
 }
 
 // CacheManager determines if there is a result that matches the cache keys

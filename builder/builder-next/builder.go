@@ -3,7 +3,7 @@ package buildkit
 import (
 	"context"
 	"fmt"
-	"github.com/containerd/containerd"
+	containerd "github.com/containerd/containerd/v2/client"
 	"io"
 	"net"
 	"strconv"
@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerd/containerd/platforms"
-	"github.com/containerd/containerd/remotes/docker"
+	"github.com/containerd/containerd/v2/platforms"
+	"github.com/containerd/containerd/v2/remotes/docker"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/backend"
 	timetypes "github.com/docker/docker/api/types/time"

@@ -15,7 +15,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/containerd/containerd/platforms"
+	"github.com/containerd/containerd/v2/platforms"
 	"github.com/docker/docker/api"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/builder"

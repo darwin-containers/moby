@@ -3,8 +3,8 @@ package containerd
 import (
 	"context"
 
-	cerrdefs "github.com/containerd/containerd/errdefs"
-	containerdimages "github.com/containerd/containerd/images"
+	cerrdefs "github.com/containerd/containerd/v2/errdefs"
+	containerdimages "github.com/containerd/containerd/v2/images"
 	"github.com/containerd/log"
 	"github.com/distribution/reference"
 	"github.com/docker/docker/api/types/events"

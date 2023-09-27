@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/containerd/containerd/mount"
-	"github.com/containerd/containerd/snapshots"
+	"github.com/containerd/containerd/v2/mount"
+	"github.com/containerd/containerd/v2/snapshots"
 	"github.com/containerd/log"
 	"github.com/docker/docker/pkg/idtools"
 )

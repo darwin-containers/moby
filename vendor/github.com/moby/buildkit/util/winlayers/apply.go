@@ -6,8 +6,8 @@ package winlayers
 import (
 	"context"
 
-	"github.com/containerd/containerd/diff"
-	"github.com/containerd/containerd/mount"
+	"github.com/containerd/containerd/v2/diff"
+	"github.com/containerd/containerd/v2/mount"
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 )
 

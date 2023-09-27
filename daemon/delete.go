@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	cerrdefs "github.com/containerd/containerd/errdefs"
-	"github.com/containerd/containerd/leases"
+	cerrdefs "github.com/containerd/containerd/v2/errdefs"
+	"github.com/containerd/containerd/v2/leases"
 	"github.com/containerd/log"
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"

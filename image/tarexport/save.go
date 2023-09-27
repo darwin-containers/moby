@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/containerd/containerd/images"
+	"github.com/containerd/containerd/v2/images"
 	"github.com/distribution/reference"
 	"github.com/docker/distribution"
 	"github.com/docker/docker/api/types/events"

@@ -4,8 +4,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/reference"
+	"github.com/containerd/containerd/v2/content"
+	"github.com/containerd/containerd/v2/reference"
 )
 
 func HasSource(info content.Info, refspec reference.Spec) (bool, error) {

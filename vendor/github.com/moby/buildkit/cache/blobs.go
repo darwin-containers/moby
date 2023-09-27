@@ -6,13 +6,15 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/containerd/containerd/diff"
-	"github.com/containerd/containerd/diff/walking"
-	"github.com/containerd/containerd/leases"
-	"github.com/containerd/containerd/mount"
+	"github.com/containerd/containerd/v2/diff"
+	"github.com/containerd/containerd/v2/diff/walking"
+	"github.com/containerd/containerd/v2/labels"
+	"github.com/containerd/containerd/v2/leases"
+	"github.com/containerd/containerd/v2/mount"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/util/bklog"
 	"github.com/moby/buildkit/util/compression"
+	"github.com/moby/buildkit/util/converter"
 	"github.com/moby/buildkit/util/flightcontrol"
 	"github.com/moby/buildkit/util/winlayers"
 	digest "github.com/opencontainers/go-digest"
@@ -24,8 +26,6 @@ import (
 
 var g flightcontrol.Group[struct{}]
 var gFileList flightcontrol.Group[[]string]
-
-const containerdUncompressed = "containerd.io/uncompressed"
 
 var ErrNoBlobs = errors.Errorf("no blobs for snapshot")
 
@@ -189,10 +189,10 @@ func computeBlobChain(ctx context.Context, sr *immutableRef, createIfNeeded bool
 					}
 				}
 
-				if desc.Digest == "" && !isTypeWindows(sr) && comp.Type.NeedsComputeDiffBySelf() {
+				if desc.Digest == "" && !isTypeWindows(sr) && comp.Type.NeedsComputeDiffBySelf(comp) {
 					// These compression types aren't supported by containerd differ. So try to compute diff on buildkit side.
 					// This case can be happen on containerd worker + non-overlayfs snapshotter (e.g. native).
-					// See also: https://github.com/containerd/containerd/issues/4263
+					// See also: https://github.com/containerd/containerd/v2/issues/4263
 					desc, err = walking.NewWalkingDiff(sr.cm.ContentStore).Compare(ctx, lower, upper,
 						diff.WithMediaType(mediaType),
 						diff.WithReference(sr.ID()),
@@ -231,10 +231,10 @@ func computeBlobChain(ctx context.Context, sr *immutableRef, createIfNeeded bool
 					return struct{}{}, err
 				}
 
-				if diffID, ok := info.Labels[containerdUncompressed]; ok {
-					desc.Annotations[containerdUncompressed] = diffID
+				if diffID, ok := info.Labels[labels.LabelUncompressed]; ok {
+					desc.Annotations[labels.LabelUncompressed] = diffID
 				} else if mediaType == ocispecs.MediaTypeImageLayer {
-					desc.Annotations[containerdUncompressed] = desc.Digest.String()
+					desc.Annotations[labels.LabelUncompressed] = desc.Digest.String()
 				} else {
 					return struct{}{}, errors.Errorf("unknown layer compression type")
 				}
@@ -423,7 +423,7 @@ func ensureCompression(ctx context.Context, ref *immutableRef, comp compression.
 		}
 
 		// Resolve converters
-		layerConvertFunc, err := getConverter(ctx, ref.cm.ContentStore, desc, comp)
+		layerConvertFunc, err := converter.New(ctx, ref.cm.ContentStore, desc, comp)
 		if err != nil {
 			return struct{}{}, err
 		} else if layerConvertFunc == nil {

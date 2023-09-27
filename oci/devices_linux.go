@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	coci "github.com/containerd/containerd/oci"
+	coci "github.com/containerd/containerd/v2/oci"
 	specs "github.com/opencontainers/runtime-spec/specs-go"
 )
 

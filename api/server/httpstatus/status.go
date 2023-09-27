@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	cerrdefs "github.com/containerd/containerd/errdefs"
+	cerrdefs "github.com/containerd/containerd/v2/errdefs"
 	"github.com/containerd/log"
 	"github.com/docker/distribution/registry/api/errcode"
 	"github.com/docker/docker/errdefs"

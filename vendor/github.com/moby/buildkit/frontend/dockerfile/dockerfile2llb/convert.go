@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/containerd/containerd/platforms"
-	"github.com/docker/distribution/reference"
+	"github.com/containerd/containerd/v2/platforms"
+	"github.com/distribution/reference"
 	"github.com/docker/go-connections/nat"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/client/llb/imagemetaresolver"
@@ -56,6 +56,7 @@ var nonEnvArgs = map[string]struct{}{
 type ConvertOpt struct {
 	dockerui.Config
 	Client         *dockerui.Client
+	MainContext    *llb.State
 	SourceMap      *llb.SourceMap
 	TargetPlatform *ocispecs.Platform
 	MetaResolver   llb.ImageMetaResolver
@@ -138,6 +139,10 @@ func ListTargets(ctx context.Context, dt []byte) (*targets.List, error) {
 func toDispatchState(ctx context.Context, dt []byte, opt ConvertOpt) (*dispatchState, error) {
 	if len(dt) == 0 {
 		return nil, errors.Errorf("the Dockerfile cannot be empty")
+	}
+
+	if opt.Client != nil && opt.MainContext != nil {
+		return nil, errors.Errorf("Client and MainContext cannot both be provided")
 	}
 
 	namedContext := func(ctx context.Context, name string, copt dockerui.ContextOpt) (*llb.State, *image.Image, error) {
@@ -269,6 +274,10 @@ func toDispatchState(ctx context.Context, dt []byte, opt ConvertOpt) (*dispatchS
 							OS:           img.OS,
 							Architecture: img.Architecture,
 							Variant:      img.Variant,
+							OSVersion:    img.OSVersion,
+						}
+						if img.OSFeatures != nil {
+							ds.platform.OSFeatures = append([]string{}, img.OSFeatures...)
 						}
 					}
 				}
@@ -312,7 +321,7 @@ func toDispatchState(ctx context.Context, dt []byte, opt ConvertOpt) (*dispatchS
 		var ok bool
 		target, ok = allDispatchStates.findStateByName(opt.Target)
 		if !ok {
-			return nil, errors.Errorf("target stage %s could not be found", opt.Target)
+			return nil, errors.Errorf("target stage %q could not be found", opt.Target)
 		}
 	}
 
@@ -567,13 +576,16 @@ func toDispatchState(ctx context.Context, dt []byte, opt ConvertOpt) (*dispatchS
 	if includePatterns := normalizeContextPaths(ctxPaths); includePatterns != nil {
 		opts = append(opts, llb.FollowPaths(includePatterns))
 	}
+	bctx := opt.MainContext
 	if opt.Client != nil {
-		bctx, err := opt.Client.MainContext(ctx, opts...)
+		bctx, err = opt.Client.MainContext(ctx, opts...)
 		if err != nil {
 			return nil, err
 		}
-		buildContext.Output = bctx.Output()
+	} else if bctx == nil {
+		bctx = dockerui.DefaultMainContext(opts...)
 	}
+	buildContext.Output = bctx.Output()
 
 	defaults := []llb.ConstraintsOpt{
 		llb.Platform(platformOpt.targetPlatform),
@@ -587,6 +599,10 @@ func toDispatchState(ctx context.Context, dt []byte, opt ConvertOpt) (*dispatchS
 		target.image.OS = platformOpt.targetPlatform.OS
 		target.image.Architecture = platformOpt.targetPlatform.Architecture
 		target.image.Variant = platformOpt.targetPlatform.Variant
+		target.image.OSVersion = platformOpt.targetPlatform.OSVersion
+		if platformOpt.targetPlatform.OSFeatures != nil {
+			target.image.OSFeatures = append([]string{}, platformOpt.targetPlatform.OSFeatures...)
+		}
 	}
 
 	return target, nil
@@ -753,6 +769,7 @@ func dispatch(d *dispatchState, cmd command, opt dispatchOpt) error {
 			chown:        c.Chown,
 			chmod:        c.Chmod,
 			link:         c.Link,
+			parents:      c.Parents,
 			location:     c.Location(),
 			opt:          opt,
 		})
@@ -1159,6 +1176,14 @@ func dispatchCopy(d *dispatchState, cfg copyConfig) error {
 				AllowEmptyWildcard:  true,
 			}}, copyOpt...)
 
+			if cfg.parents {
+				path := strings.TrimPrefix(src, "/")
+				opts = append(opts, &llb.CopyInfo{
+					IncludePatterns: []string{path},
+				})
+				src = "/"
+			}
+
 			if a == nil {
 				a = llb.Copy(cfg.source, src, dest, opts...)
 			} else {
@@ -1249,6 +1274,7 @@ type copyConfig struct {
 	link         bool
 	keepGitDir   bool
 	checksum     digest.Digest
+	parents      bool
 	location     []parser.Range
 	opt          dispatchOpt
 }

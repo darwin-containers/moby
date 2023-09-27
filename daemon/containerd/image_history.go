@@ -4,8 +4,8 @@ import (
 	"context"
 	"sort"
 
-	"github.com/containerd/containerd/images"
-	cplatforms "github.com/containerd/containerd/platforms"
+	"github.com/containerd/containerd/v2/images"
+	cplatforms "github.com/containerd/containerd/v2/platforms"
 	"github.com/containerd/log"
 	"github.com/distribution/reference"
 	imagetype "github.com/docker/docker/api/types/image"

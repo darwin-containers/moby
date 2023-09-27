@@ -2,8 +2,8 @@ package daemon
 
 import (
 	"context"
-	"github.com/containerd/containerd/containers"
-	coci "github.com/containerd/containerd/oci"
+	"github.com/containerd/containerd/v2/containers"
+	coci "github.com/containerd/containerd/v2/oci"
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/container"
 	"github.com/docker/docker/daemon/config"

@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/containerd/containerd/images"
+	"github.com/containerd/containerd/v2/images"
 	"github.com/containerd/log"
 	"github.com/distribution/reference"
 	"github.com/docker/docker/api/types/events"

@@ -64,6 +64,7 @@ type edge struct {
 	hasActiveOutgoing         bool
 
 	releaserCount int
+	owner         *edge
 	keysDidChange bool
 	index         *edgeIndex
 
@@ -85,7 +86,7 @@ type dep struct {
 	err               error
 }
 
-// expDep holds secorndary exporter info for dependency
+// expDep holds secondary exporter info for dependency
 type expDep struct {
 	index    int
 	cacheKey CacheKeyWithSelector
@@ -116,10 +117,12 @@ type edgeRequest struct {
 	currentKeys  int
 }
 
-// incrementReferenceCount increases the number of times release needs to be
+// takeOwnership increases the number of times release needs to be
 // called to release the edge. Called on merging edges.
-func (e *edge) incrementReferenceCount() {
-	e.releaserCount++
+func (e *edge) takeOwnership(old *edge) {
+	e.releaserCount += old.releaserCount + 1
+	old.owner = e
+	old.releaseResult()
 }
 
 // release releases the edge resources
@@ -128,6 +131,10 @@ func (e *edge) release() {
 		e.releaserCount--
 		return
 	}
+	e.releaseResult()
+}
+
+func (e *edge) releaseResult() {
 	e.index.Release(e)
 	if e.result != nil {
 		go e.result.Release(context.TODO())
@@ -361,7 +368,7 @@ func (e *edge) unpark(incoming []pipe.Sender, updates, allPipes []pipe.Receiver,
 
 	if e.execReq == nil {
 		if added := e.createInputRequests(desiredState, f, false); !added && !e.hasActiveOutgoing && !cacheMapReq {
-			bklog.G(context.TODO()).Errorf("buildkit scheluding error: leaving incoming open. forcing solve. Please report this with BUILDKIT_SCHEDULER_DEBUG=1")
+			bklog.G(context.TODO()).Errorf("buildkit scheduling error: leaving incoming open. forcing solve. Please report this with BUILDKIT_SCHEDULER_DEBUG=1")
 			debugSchedulerPreUnpark(e, incoming, updates, allPipes)
 			e.createInputRequests(desiredState, f, true)
 		}

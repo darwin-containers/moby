@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/images"
-	"github.com/containerd/containerd/remotes/docker"
+	"github.com/containerd/containerd/v2/content"
+	"github.com/containerd/containerd/v2/images"
+	"github.com/containerd/containerd/v2/remotes/docker"
 	distreference "github.com/distribution/reference"
 	imagestore "github.com/docker/docker/image"
 	"github.com/docker/docker/reference"

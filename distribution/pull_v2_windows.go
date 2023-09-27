@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/Microsoft/hcsshim/osversion"
-	"github.com/containerd/containerd/platforms"
+	"github.com/containerd/containerd/v2/platforms"
 	"github.com/containerd/log"
 	"github.com/docker/distribution"
 	"github.com/docker/distribution/manifest/manifestlist"

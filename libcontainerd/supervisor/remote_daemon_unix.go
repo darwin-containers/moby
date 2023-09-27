@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/containerd/containerd/defaults"
+	"github.com/containerd/containerd/v2/defaults"
 	"github.com/docker/docker/pkg/process"
 )
 

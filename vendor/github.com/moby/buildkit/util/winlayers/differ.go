@@ -9,12 +9,13 @@ import (
 	"io"
 	"time"
 
-	"github.com/containerd/containerd/archive"
-	"github.com/containerd/containerd/archive/compression"
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/diff"
-	"github.com/containerd/containerd/errdefs"
-	"github.com/containerd/containerd/mount"
+	"github.com/containerd/containerd/v2/archive"
+	"github.com/containerd/containerd/v2/archive/compression"
+	"github.com/containerd/containerd/v2/content"
+	"github.com/containerd/containerd/v2/diff"
+	"github.com/containerd/containerd/v2/errdefs"
+	"github.com/containerd/containerd/v2/labels"
+	"github.com/containerd/containerd/v2/mount"
 	log "github.com/moby/buildkit/util/bklog"
 	digest "github.com/opencontainers/go-digest"
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
@@ -121,7 +122,7 @@ func (s *winDiffer) Compare(ctx context.Context, lower, upper []mount.Mount, opt
 				if config.Labels == nil {
 					config.Labels = map[string]string{}
 				}
-				config.Labels["containerd.io/uncompressed"] = dgstr.Digest().String()
+				config.Labels[labels.LabelUncompressed] = dgstr.Digest().String()
 			} else {
 				w, discard, done := makeWindowsLayer(ctx, cw)
 				if err = archive.WriteDiff(ctx, w, lowerRoot, upperRoot); err != nil {

@@ -6,9 +6,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/errdefs"
-	"github.com/containerd/containerd/reference"
+	"github.com/containerd/containerd/v2/content"
+	"github.com/containerd/containerd/v2/errdefs"
+	"github.com/containerd/containerd/v2/reference"
 	"github.com/moby/buildkit/cache/config"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/solver"
@@ -212,7 +212,7 @@ func (sr *immutableRef) getRemote(ctx context.Context, createIfNeeded bool, refC
 			}
 		}
 
-		if needsForceCompression(ctx, sr.cm.ContentStore, desc, refCfg) {
+		if refCfg.Compression.Force {
 			if needs, err := refCfg.Compression.Type.NeedsConversion(ctx, sr.cm.ContentStore, desc); err != nil {
 				return nil, err
 			} else if needs {

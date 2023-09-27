@@ -3,7 +3,7 @@ package llb
 import (
 	"io"
 
-	"github.com/containerd/containerd/platforms"
+	"github.com/containerd/containerd/v2/platforms"
 	"github.com/moby/buildkit/solver/pb"
 	digest "github.com/opencontainers/go-digest"
 )
@@ -95,14 +95,18 @@ func MarshalConstraints(base, override *Constraints) (*pb.Op, *pb.OpMetadata) {
 		c.Platform = &defaultPlatform
 	}
 
+	opPlatform := pb.Platform{
+		OS:           c.Platform.OS,
+		Architecture: c.Platform.Architecture,
+		Variant:      c.Platform.Variant,
+		OSVersion:    c.Platform.OSVersion,
+	}
+	if c.Platform.OSFeatures != nil {
+		opPlatform.OSFeatures = append([]string{}, c.Platform.OSFeatures...)
+	}
+
 	return &pb.Op{
-		Platform: &pb.Platform{
-			OS:           c.Platform.OS,
-			Architecture: c.Platform.Architecture,
-			Variant:      c.Platform.Variant,
-			OSVersion:    c.Platform.OSVersion,
-			OSFeatures:   c.Platform.OSFeatures,
-		},
+		Platform: &opPlatform,
 		Constraints: &pb.WorkerConstraints{
 			Filter: c.WorkerConstraints,
 		},

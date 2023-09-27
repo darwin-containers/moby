@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/leases"
+	"github.com/containerd/containerd/v2/content"
+	"github.com/containerd/containerd/v2/leases"
 	"github.com/docker/docker/container"
 	daemonevents "github.com/docker/docker/daemon/events"
 	"github.com/docker/docker/distribution"

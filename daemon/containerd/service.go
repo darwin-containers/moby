@@ -3,13 +3,13 @@ package containerd
 import (
 	"context"
 	"fmt"
-	"github.com/containerd/containerd/plugins"
+	"github.com/containerd/containerd/v2/plugins"
 	"sync/atomic"
 
-	"github.com/containerd/containerd"
-	cerrdefs "github.com/containerd/containerd/errdefs"
-	"github.com/containerd/containerd/remotes/docker"
-	"github.com/containerd/containerd/snapshots"
+	containerd "github.com/containerd/containerd/v2/client"
+	cerrdefs "github.com/containerd/containerd/v2/errdefs"
+	"github.com/containerd/containerd/v2/remotes/docker"
+	"github.com/containerd/containerd/v2/snapshots"
 	"github.com/containerd/log"
 	"github.com/distribution/reference"
 	"github.com/docker/docker/container"

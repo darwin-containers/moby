@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/containerd/containerd/platforms"
+	"github.com/containerd/containerd/v2/platforms"
 	"github.com/containerd/log"
 	"github.com/moby/buildkit/cache"
 	"github.com/moby/buildkit/util/progress"

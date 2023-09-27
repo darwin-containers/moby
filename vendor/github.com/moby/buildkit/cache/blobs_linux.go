@@ -8,9 +8,10 @@ import (
 	"context"
 	"io"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/errdefs"
-	"github.com/containerd/containerd/mount"
+	"github.com/containerd/containerd/v2/content"
+	"github.com/containerd/containerd/v2/errdefs"
+	labelspkg "github.com/containerd/containerd/v2/labels"
+	"github.com/containerd/containerd/v2/mount"
 	"github.com/moby/buildkit/util/bklog"
 	"github.com/moby/buildkit/util/compression"
 	"github.com/moby/buildkit/util/overlay"
@@ -69,7 +70,7 @@ func (sr *immutableRef) tryComputeOverlayBlob(ctx context.Context, lower, upper 
 		if labels == nil {
 			labels = map[string]string{}
 		}
-		labels[containerdUncompressed] = dgstr.Digest().String()
+		labels[labelspkg.LabelUncompressed] = dgstr.Digest().String()
 	} else {
 		if err = overlay.WriteUpperdir(ctx, bufW, upperdir, lower); err != nil {
 			return emptyDesc, false, errors.Wrap(err, "failed to write diff")
@@ -101,9 +102,9 @@ func (sr *immutableRef) tryComputeOverlayBlob(ctx context.Context, lower, upper 
 		cinfo.Labels = make(map[string]string)
 	}
 	// Set uncompressed label if digest already existed without label
-	if _, ok := cinfo.Labels[containerdUncompressed]; !ok {
-		cinfo.Labels[containerdUncompressed] = labels[containerdUncompressed]
-		if _, err := sr.cm.ContentStore.Update(ctx, cinfo, "labels."+containerdUncompressed); err != nil {
+	if _, ok := cinfo.Labels[labelspkg.LabelUncompressed]; !ok {
+		cinfo.Labels[labelspkg.LabelUncompressed] = labels[labelspkg.LabelUncompressed]
+		if _, err := sr.cm.ContentStore.Update(ctx, cinfo, "labels."+labelspkg.LabelUncompressed); err != nil {
 			return emptyDesc, false, errors.Wrap(err, "error setting uncompressed label")
 		}
 	}

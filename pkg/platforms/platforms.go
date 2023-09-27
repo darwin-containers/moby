@@ -1,7 +1,7 @@
 package platforms
 
 import (
-	cplatforms "github.com/containerd/containerd/platforms"
+	cplatforms "github.com/containerd/containerd/v2/platforms"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 

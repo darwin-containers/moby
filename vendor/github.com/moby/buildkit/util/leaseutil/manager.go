@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/containerd/containerd/leases"
-	"github.com/containerd/containerd/namespaces"
+	"github.com/containerd/containerd/v2/leases"
+	"github.com/containerd/containerd/v2/namespaces"
 )
 
 func WithLease(ctx context.Context, ls leases.Manager, opts ...leases.Opt) (context.Context, func(context.Context) error, error) {

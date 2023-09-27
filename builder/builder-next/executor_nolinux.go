@@ -3,7 +3,7 @@
 package buildkit
 
 import (
-	"github.com/containerd/containerd"
+	containerd "github.com/containerd/containerd/v2/client"
 	"github.com/docker/docker/daemon/config"
 	"github.com/docker/docker/libnetwork"
 	"github.com/docker/docker/pkg/idtools"

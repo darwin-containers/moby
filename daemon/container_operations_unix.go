@@ -5,7 +5,7 @@ package daemon // import "github.com/docker/docker/daemon"
 import (
 	"context"
 	"fmt"
-	"github.com/containerd/containerd/mount"
+	"github.com/containerd/containerd/v2/mount"
 	"os"
 	"path/filepath"
 	"strconv"

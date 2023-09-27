@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/images"
+	"github.com/containerd/containerd/v2/content"
+	"github.com/containerd/containerd/v2/images"
 	"github.com/klauspost/compress/zstd"
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 )
@@ -34,15 +34,11 @@ func (c zstdType) NeedsConversion(ctx context.Context, cs content.Store, desc oc
 	return true, nil
 }
 
-func (c zstdType) NeedsComputeDiffBySelf() bool {
+func (c zstdType) NeedsComputeDiffBySelf(comp Config) bool {
 	return true
 }
 
 func (c zstdType) OnlySupportOCITypes() bool {
-	return false
-}
-
-func (c zstdType) NeedsForceCompression() bool {
 	return false
 }
 
