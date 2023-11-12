@@ -22,7 +22,7 @@ func newExecutor(root string, cgroupParent string, containerdClient *containerd.
 		return nil, err
 	}
 
-	return containerdexecutor.New(containerdClient, root, cgroupParent, np, dnsConfig, apparmorProfile, false, "", false, nil), nil
+	return containerdexecutor.New(containerdClient, root, cgroupParent, np, dnsConfig, apparmorProfile, false, "", false, &containerdexecutor.RuntimeInfo{Name: containerdClient.Runtime()}), nil
 }
 
 func getDNSConfig(config.DNSConfig) *oci.DNSConfig {
