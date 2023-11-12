@@ -1768,8 +1768,8 @@ github.com/lyft/protoc-gen-star v0.6.0/go.mod h1:TGAoBVkt8w7MPG72TrKIu85MIdXwDuz
 github.com/lyft/protoc-gen-star v0.6.1/go.mod h1:TGAoBVkt8w7MPG72TrKIu85MIdXwDuzJYeZuUPFPNwA=
 github.com/lyft/protoc-gen-star/v2 v2.0.1/go.mod h1:RcCdONR2ScXaYnQC5tUzxzlpA3WVYF7/opLeUgcQs/o=
 github.com/lyft/protoc-gen-star/v2 v2.0.3/go.mod h1:amey7yeodaJhXSbf/TlLvWiqQfLOSpEk//mLlc+axEk=
-github.com/macOScontainers/buildkit v0.0.0-20231112102433-09a36e0d7148 h1:jqhA8XyM1ZKvMkRQun6NlbQANFQTt4rtsa9ilQ42ggg=
-github.com/macOScontainers/buildkit v0.0.0-20231112102433-09a36e0d7148/go.mod h1:0T/4PFgzltJTG5qBRE7zXRSAKBNMsypQR8rfDHhBC48=
+github.com/macOScontainers/buildkit v0.0.0-20231112184014-4fce8ee46ff7 h1:XPydFkTg8WfC11jJoqpeGMTrkdIlM1KpUXLmT6dCat0=
+github.com/macOScontainers/buildkit v0.0.0-20231112184014-4fce8ee46ff7/go.mod h1:14fKeRpUGrWPtCpTJ7hHNNXRg2mt4Ugt2pAJ8ER7+HA=
 github.com/macOScontainers/containerd/v2 v2.0.0-20231111120959-adc332757eab h1:VtiNgJeI2Ts6FjFARX01FvNo8yptVbJluaYcQ3/jHkQ=
 github.com/macOScontainers/containerd/v2 v2.0.0-20231111120959-adc332757eab/go.mod h1:gAaOLSx7RkoqcMxbvj4PXpAS2/FKadLV87aECmoBDw4=
 github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=

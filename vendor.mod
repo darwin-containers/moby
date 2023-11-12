@@ -223,4 +223,4 @@ require (
 
 replace github.com/containerd/containerd/v2 => github.com/macOScontainers/containerd/v2 v2.0.0-20231111120959-adc332757eab
 
-replace github.com/moby/buildkit => github.com/macOScontainers/buildkit v0.0.0-20231112102433-09a36e0d7148
+replace github.com/moby/buildkit => github.com/macOScontainers/buildkit v0.0.0-20231112184014-4fce8ee46ff7
