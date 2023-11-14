@@ -1076,7 +1076,7 @@ github.com/syndtr/gocapability/capability
 # github.com/tinylib/msgp v1.1.8
 ## explicit; go 1.15
 github.com/tinylib/msgp/msgp
-# github.com/tonistiigi/fsutil v0.0.0-20230825212630-f09800878302
+# github.com/tonistiigi/fsutil v0.0.0-20230825212630-f09800878302 => github.com/slonopotamus/fsutil v0.0.0-20231112183302-4e3df80cb5de
 ## explicit; go 1.19
 github.com/tonistiigi/fsutil
 github.com/tonistiigi/fsutil/copy
@@ -1556,3 +1556,4 @@ tags.cncf.io/container-device-interface/pkg/parser
 tags.cncf.io/container-device-interface/specs-go
 # github.com/containerd/containerd/v2 => github.com/macOScontainers/containerd/v2 v2.0.0-20231111120959-adc332757eab
 # github.com/moby/buildkit => github.com/macOScontainers/buildkit v0.0.0-20231112184014-4fce8ee46ff7
+# github.com/tonistiigi/fsutil => github.com/slonopotamus/fsutil v0.0.0-20231112183302-4e3df80cb5de
