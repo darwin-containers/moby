@@ -221,6 +221,8 @@ require (
 	tags.cncf.io/container-device-interface/specs-go v0.6.0 // indirect
 )
 
-replace github.com/containerd/containerd/v2 => github.com/macOScontainers/containerd/v2 v2.0.0-20231111120959-adc332757eab
-
-replace github.com/moby/buildkit => github.com/macOScontainers/buildkit v0.0.0-20231112184014-4fce8ee46ff7
+replace (
+	github.com/containerd/containerd/v2 => github.com/macOScontainers/containerd/v2 v2.0.0-20231111120959-adc332757eab
+	github.com/moby/buildkit => github.com/macOScontainers/buildkit v0.0.0-20231112184014-4fce8ee46ff7
+	github.com/tonistiigi/fsutil => github.com/slonopotamus/fsutil v0.0.0-20231112183302-4e3df80cb5de
+)
