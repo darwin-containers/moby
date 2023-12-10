@@ -10,6 +10,7 @@ import (
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/container"
 	"github.com/docker/docker/daemon/config"
+	"github.com/docker/docker/daemon/initlayer"
 	"github.com/docker/docker/libcontainerd/remote"
 	"github.com/docker/docker/libnetwork"
 	nwconfig "github.com/docker/docker/libnetwork/config"
@@ -68,8 +69,8 @@ func adjustParallelLimit(n int, limit int) int {
 }
 
 func setupInitLayer(idMapping idtools.IdentityMapping) func(string) error {
-	return func(_ string) error {
-		return nil
+	return func(initPath string) error {
+		return initlayer.Setup(initPath, idMapping.RootPair())
 	}
 }
 
