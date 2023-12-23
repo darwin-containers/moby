@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/images"
+	"github.com/containerd/containerd/v2/core/content"
+	"github.com/containerd/containerd/v2/core/images"
 	"github.com/docker/docker/pkg/ioutils"
 	"github.com/moby/buildkit/util/iohelper"
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
@@ -40,15 +40,11 @@ func (c uncompressedType) NeedsConversion(ctx context.Context, cs content.Store,
 	return true, nil
 }
 
-func (c uncompressedType) NeedsComputeDiffBySelf() bool {
+func (c uncompressedType) NeedsComputeDiffBySelf(comp Config) bool {
 	return false
 }
 
 func (c uncompressedType) OnlySupportOCITypes() bool {
-	return false
-}
-
-func (c uncompressedType) NeedsForceCompression() bool {
 	return false
 }
 

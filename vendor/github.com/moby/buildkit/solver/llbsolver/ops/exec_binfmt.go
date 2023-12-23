@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/containerd/containerd/mount"
-	"github.com/containerd/containerd/platforms"
+	"github.com/containerd/containerd/v2/core/mount"
+	"github.com/containerd/platforms"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/moby/buildkit/snapshot"
 	"github.com/moby/buildkit/solver/pb"
@@ -90,6 +90,8 @@ func getEmulator(ctx context.Context, p *pb.Platform, idmap *idtools.IdentityMap
 	pp := platforms.Normalize(ocispecs.Platform{
 		Architecture: p.Architecture,
 		OS:           p.OS,
+		OSVersion:    p.OSVersion,
+		OSFeatures:   p.OSFeatures,
 		Variant:      p.Variant,
 	})
 

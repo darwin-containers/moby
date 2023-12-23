@@ -13,7 +13,7 @@ const (
 	// or if an error was encountered when obtaining the exit status, it is set to 255.
 	//
 	// This const is defined here to prevent importing github.com/containerd/containerd
-	// and corresponds with https://github.com/containerd/containerd/blob/40b22ef0741028917761d8c5d5d29e0d19038836/task.go#L52-L55
+	// and corresponds with https://github.com/containerd/containerd/v2/blob/40b22ef0741028917761d8c5d5d29e0d19038836/task.go#L52-L55
 	UnknownExitStatus = 255
 )
 
