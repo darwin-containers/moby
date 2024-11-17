@@ -253,3 +253,9 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 	tags.cncf.io/container-device-interface/specs-go v1.0.0 // indirect
 )
+
+replace github.com/containerd/containerd/v2 => github.com/darwin-containers/containerd/v2 v2.0.0-20251214124930-75029f1d4bce
+
+replace github.com/containerd/containerd/api => github.com/darwin-containers/containerd/api v0.0.0-20251214124930-75029f1d4bce
+
+replace github.com/moby/buildkit => github.com/darwin-containers/buildkit v0.0.0-20251214130656-b744ee40ce1b

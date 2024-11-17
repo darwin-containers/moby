@@ -363,7 +363,7 @@ github.com/containerd/cgroups/v3/cgroup2/stats
 # github.com/containerd/console v1.0.5
 ## explicit; go 1.13
 github.com/containerd/console
-# github.com/containerd/containerd/api v1.10.0
+# github.com/containerd/containerd/api v1.10.0 => github.com/darwin-containers/containerd/api v0.0.0-20251214124930-75029f1d4bce
 ## explicit; go 1.23.0
 github.com/containerd/containerd/api/events
 github.com/containerd/containerd/api/runtime/sandbox/v1
@@ -387,7 +387,7 @@ github.com/containerd/containerd/api/types/runc/options
 github.com/containerd/containerd/api/types/runtimeoptions/v1
 github.com/containerd/containerd/api/types/task
 github.com/containerd/containerd/api/types/transfer
-# github.com/containerd/containerd/v2 v2.2.0
+# github.com/containerd/containerd/v2 v2.2.0 => github.com/darwin-containers/containerd/v2 v2.0.0-20251214124930-75029f1d4bce
 ## explicit; go 1.24.3
 github.com/containerd/containerd/v2/client
 github.com/containerd/containerd/v2/cmd/containerd/server/config
@@ -838,7 +838,7 @@ github.com/mitchellh/hashstructure/v2
 # github.com/mitchellh/reflectwalk v1.0.2
 ## explicit
 github.com/mitchellh/reflectwalk
-# github.com/moby/buildkit v0.26.2
+# github.com/moby/buildkit v0.26.2 => github.com/darwin-containers/buildkit v0.0.0-20251214130656-b744ee40ce1b
 ## explicit; go 1.24.3
 github.com/moby/buildkit/api/services/control
 github.com/moby/buildkit/api/types
@@ -1861,3 +1861,6 @@ tags.cncf.io/container-device-interface/pkg/parser
 # tags.cncf.io/container-device-interface/specs-go v1.0.0
 ## explicit; go 1.19
 tags.cncf.io/container-device-interface/specs-go
+# github.com/containerd/containerd/v2 => github.com/darwin-containers/containerd/v2 v2.0.0-20251214124930-75029f1d4bce
+# github.com/containerd/containerd/api => github.com/darwin-containers/containerd/api v0.0.0-20251214124930-75029f1d4bce
+# github.com/moby/buildkit => github.com/darwin-containers/buildkit v0.0.0-20251214130656-b744ee40ce1b

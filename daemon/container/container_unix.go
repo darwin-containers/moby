@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/containerd/containerd/v2/core/mount"
 	"github.com/containerd/continuity/fs"
 	"github.com/containerd/log"
 	containertypes "github.com/moby/moby/api/types/container"
@@ -15,7 +16,6 @@ import (
 	mounttypes "github.com/moby/moby/api/types/mount"
 	swarmtypes "github.com/moby/moby/api/types/swarm"
 	volumemounts "github.com/moby/moby/v2/daemon/volume/mounts"
-	"github.com/moby/sys/mount"
 	"github.com/opencontainers/selinux/go-selinux/label"
 	"github.com/pkg/errors"
 )
@@ -167,7 +167,7 @@ func (container *Container) UnmountIpcMount() error {
 	if shmPath == "" {
 		return nil
 	}
-	if err = mount.Unmount(shmPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+	if err = mount.Unmount(shmPath, 0); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
 	return nil
@@ -241,7 +241,7 @@ func (container *Container) UnmountSecrets() error {
 		return err
 	}
 
-	return mount.RecursiveUnmount(p)
+	return mount.UnmountRecursive(p, 0)
 }
 
 // UpdateContainer updates configuration of a container. Callers must hold a Lock on the Container.
@@ -351,7 +351,7 @@ func (container *Container) DetachAndUnmount(volumeEventLog func(name string, ac
 	}
 
 	for _, mountPath := range mountPaths {
-		if err := mount.Unmount(mountPath); err != nil {
+		if err := mount.Unmount(mountPath, 0); err != nil {
 			log.G(ctx).WithError(err).WithField("container", container.ID).
 				Warn("Unable to unmount")
 		}
