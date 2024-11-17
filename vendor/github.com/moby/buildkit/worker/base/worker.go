@@ -2,7 +2,6 @@ package base
 
 import (
 	"context"
-	stderrors "errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +13,7 @@ import (
 	"github.com/containerd/containerd/v2/core/remotes/docker"
 	"github.com/containerd/containerd/v2/pkg/gc"
 	"github.com/containerd/platforms"
+	"github.com/hashicorp/go-multierror"
 	"github.com/moby/buildkit/cache"
 	"github.com/moby/buildkit/cache/metadata"
 	"github.com/moby/buildkit/client"
@@ -222,21 +222,21 @@ func (w *Worker) GarbageCollect(ctx context.Context) error {
 }
 
 func (w *Worker) Close() error {
-	var errs []error
+	var rerr error
 	if err := w.MetadataStore.Close(); err != nil {
-		errs = append(errs, err)
+		rerr = multierror.Append(rerr, err)
 	}
 	for _, provider := range w.NetworkProviders {
 		if err := provider.Close(); err != nil {
-			errs = append(errs, err)
+			rerr = multierror.Append(rerr, err)
 		}
 	}
 	if w.ResourceMonitor != nil {
 		if err := w.ResourceMonitor.Close(); err != nil {
-			errs = append(errs, err)
+			rerr = multierror.Append(rerr, err)
 		}
 	}
-	return stderrors.Join(errs...)
+	return rerr
 }
 
 func (w *Worker) ContentStore() *containerdsnapshot.Store {

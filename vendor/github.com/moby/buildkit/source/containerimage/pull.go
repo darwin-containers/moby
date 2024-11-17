@@ -21,7 +21,6 @@ import (
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/solver"
 	"github.com/moby/buildkit/solver/errdefs"
-	"github.com/moby/buildkit/util/cachedigest"
 	"github.com/moby/buildkit/util/estargz"
 	"github.com/moby/buildkit/util/flightcontrol"
 	"github.com/moby/buildkit/util/imageutil"
@@ -82,7 +81,7 @@ func mainManifestKey(desc ocispecs.Descriptor, platform ocispecs.Platform, layer
 	if err != nil {
 		return "", err
 	}
-	return cachedigest.FromBytes(dt, cachedigest.TypeJSON)
+	return digest.FromBytes(dt), nil
 }
 
 func (p *puller) CacheKey(ctx context.Context, g session.Group, index int) (cacheKey string, imgDigest string, cacheOpts solver.CacheOpts, cacheDone bool, err error) {
@@ -293,7 +292,7 @@ func cacheKeyFromConfig(dt []byte, layerLimit *int) (digest.Digest, error) {
 		if layerLimit != nil {
 			return "", errors.Wrap(err, "failed to parse image config")
 		}
-		return cachedigest.FromBytes(dt, cachedigest.TypeJSON) // digest of config
+		return digest.FromBytes(dt), nil // digest of config
 	}
 	if layerLimit != nil {
 		l := *layerLimit

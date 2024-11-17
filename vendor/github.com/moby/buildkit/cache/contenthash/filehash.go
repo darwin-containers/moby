@@ -2,13 +2,12 @@ package contenthash
 
 import (
 	"archive/tar"
-	"encoding/hex"
+	"crypto/sha256"
 	"hash"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/moby/buildkit/util/cachedigest"
 	"github.com/pkg/errors"
 	fstypes "github.com/tonistiigi/fsutil/types"
 )
@@ -63,14 +62,13 @@ func NewFromStat(stat *fstypes.Stat) (hash.Hash, error) {
 		}
 	}
 	// fmt.Printf("hdr: %#v\n", hdr)
-	h := cachedigest.NewHash(cachedigest.TypeFile)
-	tsh := &tarsumHash{hdr: hdr, Hash: h}
+	tsh := &tarsumHash{hdr: hdr, Hash: sha256.New()}
 	tsh.Reset() // initialize header
 	return tsh, nil
 }
 
 type tarsumHash struct {
-	*cachedigest.Hash
+	hash.Hash
 	hdr *tar.Header
 }
 
@@ -79,19 +77,6 @@ func (tsh *tarsumHash) Reset() {
 	// comply with hash.Hash and reset to the state hash had before any writes
 	tsh.Hash.Reset()
 	WriteV1TarsumHeaders(tsh.hdr, tsh.Hash)
-}
-
-func (tsh *tarsumHash) Write(p []byte) (n int, err error) {
-	n, err = tsh.WriteNoDebug(p)
-	if n > 0 {
-		tsh.hdr.Size += int64(n)
-	}
-	return n, err
-}
-
-func (tsh *tarsumHash) Sum(_ []byte) []byte {
-	b, _ := hex.DecodeString(tsh.Hash.Sum().Hex())
-	return b
 }
 
 type statInfo struct {

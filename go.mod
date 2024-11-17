@@ -117,6 +117,8 @@ require (
 	tags.cncf.io/container-device-interface v1.0.1
 )
 
+require github.com/docker/docker v28.2.2+incompatible // indirect
+
 require (
 	cloud.google.com/go v0.112.0 // indirect
 	cloud.google.com/go/longrunning v0.5.5 // indirect
@@ -262,3 +264,9 @@ exclude (
 replace github.com/moby/moby/api => ./api
 
 replace github.com/moby/moby/client => ./client
+
+replace github.com/containerd/containerd/v2 => github.com/darwin-containers/containerd/v2 v2.0.0-20250812120757-5aaa8ad58c52
+
+replace github.com/containerd/containerd/api => github.com/darwin-containers/containerd/api v0.0.0-20250812120757-5aaa8ad58c52
+
+replace github.com/moby/buildkit => github.com/darwin-containers/buildkit v0.0.0-20250812121652-e361918bfd14

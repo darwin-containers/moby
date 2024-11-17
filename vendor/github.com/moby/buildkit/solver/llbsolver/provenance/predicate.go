@@ -157,7 +157,7 @@ func NewPredicate(c *Capture) (*provenancetypes.ProvenancePredicateSLSA02, error
 	pr := &provenancetypes.ProvenancePredicateSLSA02{
 		Invocation: inv,
 		ProvenancePredicate: slsa02.ProvenancePredicate{
-			BuildType: provenancetypes.BuildKitBuildType02,
+			BuildType: provenancetypes.BuildKitBuildType,
 			Materials: materials,
 		},
 		Metadata: &provenancetypes.ProvenanceMetadataSLSA02{

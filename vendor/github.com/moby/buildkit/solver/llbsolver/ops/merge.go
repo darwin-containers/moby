@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/moby/buildkit/util/cachedigest"
 	"github.com/moby/buildkit/worker"
 	"github.com/pkg/errors"
 
@@ -47,12 +46,8 @@ func (m *mergeOp) CacheMap(ctx context.Context, group session.Group, index int) 
 		return nil, false, err
 	}
 
-	dgst, err := cachedigest.FromBytes(dt, cachedigest.TypeJSON)
-	if err != nil {
-		return nil, false, err
-	}
 	cm := &solver.CacheMap{
-		Digest: dgst,
+		Digest: digest.FromBytes(dt),
 		Deps: make([]struct {
 			Selector          digest.Digest
 			ComputeDigestFunc solver.ResultBasedCacheFunc

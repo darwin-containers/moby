@@ -354,19 +354,13 @@ func parseAdd(req parseRequest) (*AddCommand, error) {
 		unpack = &b
 	}
 
-	var keepGit *bool
-	if _, ok := req.flags.used["keep-git-dir"]; ok {
-		b := flKeepGitDir.Value == "true"
-		keepGit = &b
-	}
-
 	return &AddCommand{
 		withNameAndCode: newWithNameAndCode(req),
 		SourcesAndDest:  *sourcesAndDest,
 		Chown:           flChown.Value,
 		Chmod:           flChmod.Value,
 		Link:            flLink.Value == "true",
-		KeepGitDir:      keepGit,
+		KeepGitDir:      flKeepGitDir.Value == "true",
 		Checksum:        flChecksum.Value,
 		ExcludePatterns: stringValuesFromFlagIfPossible(flExcludes),
 		Unpack:          unpack,
