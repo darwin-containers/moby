@@ -299,7 +299,7 @@ github.com/containerd/cgroups/v3/cgroup2/stats
 # github.com/containerd/console v1.0.5
 ## explicit; go 1.13
 github.com/containerd/console
-# github.com/containerd/containerd/api v1.9.0
+# github.com/containerd/containerd/api v1.9.0 => github.com/darwin-containers/containerd/api v0.0.0-20250812120757-5aaa8ad58c52
 ## explicit; go 1.23.0
 github.com/containerd/containerd/api/events
 github.com/containerd/containerd/api/runtime/sandbox/v1
@@ -322,7 +322,7 @@ github.com/containerd/containerd/api/types/runc/options
 github.com/containerd/containerd/api/types/runtimeoptions/v1
 github.com/containerd/containerd/api/types/task
 github.com/containerd/containerd/api/types/transfer
-# github.com/containerd/containerd/v2 v2.1.4
+# github.com/containerd/containerd/v2 v2.1.4 => github.com/darwin-containers/containerd/v2 v2.0.0-20250812120757-5aaa8ad58c52
 ## explicit; go 1.23.0
 github.com/containerd/containerd/v2/client
 github.com/containerd/containerd/v2/cmd/containerd/server/config
@@ -505,8 +505,14 @@ github.com/docker/distribution/registry/client/auth/challenge
 github.com/docker/distribution/registry/client/transport
 github.com/docker/distribution/registry/storage/cache
 github.com/docker/distribution/registry/storage/cache/memory
+# github.com/docker/docker v28.2.2+incompatible
+## explicit
+github.com/docker/docker/libnetwork/internal/resolvconf
+github.com/docker/docker/libnetwork/resolvconf
+github.com/docker/docker/profiles/seccomp
 # github.com/docker/go-connections v0.6.0
 ## explicit; go 1.18
+github.com/docker/go-connections/nat
 github.com/docker/go-connections/sockets
 github.com/docker/go-connections/tlsconfig
 # github.com/docker/go-events v0.0.0-20250808211157-605354379745
@@ -753,8 +759,8 @@ github.com/mitchellh/hashstructure/v2
 # github.com/mitchellh/reflectwalk v1.0.2
 ## explicit
 github.com/mitchellh/reflectwalk
-# github.com/moby/buildkit v0.25.1
-## explicit; go 1.24.0
+# github.com/moby/buildkit v0.25.1 => github.com/darwin-containers/buildkit v0.0.0-20250812121652-e361918bfd14
+## explicit; go 1.23.0
 github.com/moby/buildkit/api/services/control
 github.com/moby/buildkit/api/types
 github.com/moby/buildkit/cache
@@ -800,7 +806,6 @@ github.com/moby/buildkit/frontend/attestations
 github.com/moby/buildkit/frontend/attestations/sbom
 github.com/moby/buildkit/frontend/dockerfile/builder
 github.com/moby/buildkit/frontend/dockerfile/command
-github.com/moby/buildkit/frontend/dockerfile/dfgitutil
 github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb
 github.com/moby/buildkit/frontend/dockerfile/instructions
 github.com/moby/buildkit/frontend/dockerfile/linter
@@ -861,7 +866,6 @@ github.com/moby/buildkit/util/appdefaults
 github.com/moby/buildkit/util/archutil
 github.com/moby/buildkit/util/attestation
 github.com/moby/buildkit/util/bklog
-github.com/moby/buildkit/util/cachedigest
 github.com/moby/buildkit/util/compression
 github.com/moby/buildkit/util/cond
 github.com/moby/buildkit/util/contentutil
@@ -872,7 +876,6 @@ github.com/moby/buildkit/util/db/boltutil
 github.com/moby/buildkit/util/disk
 github.com/moby/buildkit/util/entitlements
 github.com/moby/buildkit/util/entitlements/security
-github.com/moby/buildkit/util/errutil
 github.com/moby/buildkit/util/estargz
 github.com/moby/buildkit/util/flightcontrol
 github.com/moby/buildkit/util/gitutil
@@ -893,7 +896,6 @@ github.com/moby/buildkit/util/pull
 github.com/moby/buildkit/util/pull/pullprogress
 github.com/moby/buildkit/util/purl
 github.com/moby/buildkit/util/push
-github.com/moby/buildkit/util/resolvconf
 github.com/moby/buildkit/util/resolver
 github.com/moby/buildkit/util/resolver/config
 github.com/moby/buildkit/util/resolver/limited
@@ -1762,3 +1764,6 @@ tags.cncf.io/container-device-interface/pkg/parser
 tags.cncf.io/container-device-interface/specs-go
 # github.com/moby/moby/api => ./api
 # github.com/moby/moby/client => ./client
+# github.com/containerd/containerd/v2 => github.com/darwin-containers/containerd/v2 v2.0.0-20250812120757-5aaa8ad58c52
+# github.com/containerd/containerd/api => github.com/darwin-containers/containerd/api v0.0.0-20250812120757-5aaa8ad58c52
+# github.com/moby/buildkit => github.com/darwin-containers/buildkit v0.0.0-20250812121652-e361918bfd14

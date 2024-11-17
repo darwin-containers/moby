@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/containerd/platforms"
 	slsa02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
@@ -338,7 +339,7 @@ type ProvenanceCreator struct {
 	addLayers   func(context.Context) error
 }
 
-func NewProvenanceCreator(ctx context.Context, slsaVersion provenancetypes.ProvenanceSLSA, cp *provenance.Capture, res solver.ResultProxy, attrs map[string]string, j *solver.Job, usage *resources.SysSampler, customEnv map[string]any) (*ProvenanceCreator, error) {
+func NewProvenanceCreator(ctx context.Context, slsaVersion provenancetypes.ProvenanceSLSA, cp *provenance.Capture, res solver.ResultProxy, attrs map[string]string, j *solver.Job, usage *resources.SysSampler) (*ProvenanceCreator, error) {
 	var reproducible bool
 	if v, ok := attrs["reproducible"]; ok {
 		b, err := strconv.ParseBool(v)
@@ -450,8 +451,6 @@ func NewProvenanceCreator(ctx context.Context, slsaVersion provenancetypes.Prove
 		return nil, errors.Errorf("invalid mode %q", mode)
 	}
 
-	pr.Invocation.Environment.ProvenanceCustomEnv = customEnv
-
 	pc := &ProvenanceCreator{
 		pr:          pr,
 		slsaVersion: slsaVersion,
@@ -490,7 +489,7 @@ func (p *ProvenanceCreator) Predicate(ctx context.Context) (any, error) {
 	}
 
 	if p.slsaVersion == provenancetypes.ProvenanceSLSA1 {
-		return p.pr.ConvertToSLSA1(), nil
+		return provenancetypes.ConvertSLSA02ToSLSA1(p.pr), nil
 	}
 
 	return p.pr, nil
@@ -513,28 +512,43 @@ type cacheExporter struct {
 	m      map[any]struct{}
 }
 
-func (ce *cacheExporter) Add(dgst digest.Digest, deps [][]solver.CacheLink, results []solver.CacheExportResult) (solver.CacheExporterRecord, bool, error) {
-	for _, res := range results {
-		if res.EdgeVertex == "" {
-			continue
-		}
-		e := edge{
-			digest: res.EdgeVertex,
-			index:  int(res.EdgeIndex),
-		}
-		descs := make([]ocispecs.Descriptor, len(res.Result.Descriptors))
-		for i, desc := range res.Result.Descriptors {
-			d := desc
-			d.Annotations = containerimage.RemoveInternalLayerAnnotations(d.Annotations, true)
-			descs[i] = d
-		}
-		ce.layers[e] = appendLayerChain(ce.layers[e], descs)
+func (ce *cacheExporter) Add(dgst digest.Digest) solver.CacheExporterRecord {
+	return &cacheRecord{
+		ce: ce,
 	}
-	return &cacheRecord{}, true, nil
+}
+
+func (ce *cacheExporter) Visit(target any) {
+	ce.m[target] = struct{}{}
+}
+
+func (ce *cacheExporter) Visited(target any) bool {
+	_, ok := ce.m[target]
+	return ok
 }
 
 type cacheRecord struct {
-	solver.CacheExporterRecordBase
+	ce *cacheExporter
+}
+
+func (c *cacheRecord) AddResult(dgst digest.Digest, idx int, createdAt time.Time, result *solver.Remote) {
+	if result == nil || dgst == "" {
+		return
+	}
+	e := edge{
+		digest: dgst,
+		index:  idx,
+	}
+	descs := make([]ocispecs.Descriptor, len(result.Descriptors))
+	for i, desc := range result.Descriptors {
+		d := desc
+		d.Annotations = containerimage.RemoveInternalLayerAnnotations(d.Annotations, true)
+		descs[i] = d
+	}
+	c.ce.layers[e] = appendLayerChain(c.ce.layers[e], descs)
+}
+
+func (c *cacheRecord) LinkFrom(rec solver.CacheExporterRecord, index int, selector string) {
 }
 
 func resolveRemotes(ctx context.Context, res solver.Result) ([]*solver.Remote, error) {

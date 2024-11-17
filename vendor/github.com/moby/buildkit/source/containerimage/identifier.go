@@ -19,7 +19,6 @@ type ImageIdentifier struct {
 	ResolveMode resolver.ResolveMode
 	RecordType  client.UsageRecordType
 	LayerLimit  *int
-	Checksum    digest.Digest
 }
 
 func NewImageIdentifier(str string) (*ImageIdentifier, error) {

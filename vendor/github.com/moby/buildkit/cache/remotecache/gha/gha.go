@@ -14,7 +14,6 @@ import (
 
 	"github.com/containerd/containerd/v2/core/content"
 	"github.com/containerd/containerd/v2/pkg/labels"
-	cerrdefs "github.com/containerd/errdefs"
 	"github.com/moby/buildkit/cache/remotecache"
 	v1 "github.com/moby/buildkit/cache/remotecache/v1"
 	"github.com/moby/buildkit/session"
@@ -441,7 +440,7 @@ type ciProvider struct {
 
 func (p *ciProvider) Info(ctx context.Context, dgst digest.Digest) (content.Info, error) {
 	if dgst != p.desc.Digest {
-		return content.Info{}, errors.Wrapf(cerrdefs.ErrNotFound, "blob %s", dgst)
+		return content.Info{}, errors.Errorf("content not found %s", dgst)
 	}
 
 	if _, err := p.loadEntry(ctx, p.desc); err != nil {
@@ -466,7 +465,7 @@ func (p *ciProvider) loadEntry(ctx context.Context, desc ocispecs.Descriptor) (*
 		return nil, err
 	}
 	if ce == nil {
-		return nil, errors.Wrapf(cerrdefs.ErrNotFound, "blob %s", desc.Digest)
+		return nil, errors.Errorf("blob %s not found", desc.Digest)
 	}
 	if p.entries == nil {
 		p.entries = make(map[digest.Digest]*actionscache.Entry)

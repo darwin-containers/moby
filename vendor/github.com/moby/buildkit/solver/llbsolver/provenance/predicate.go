@@ -1,14 +1,12 @@
 package provenance
 
 import (
-	"maps"
 	"strings"
 
 	"github.com/containerd/platforms"
 	slsa "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/common"
 	slsa02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 	provenancetypes "github.com/moby/buildkit/solver/llbsolver/provenance/types"
-	"github.com/moby/buildkit/util/gitutil"
 	"github.com/moby/buildkit/util/purl"
 	"github.com/moby/buildkit/util/urlutil"
 	"github.com/package-url/packageurl-go"
@@ -42,8 +40,10 @@ func slsaMaterials(srcs provenancetypes.Sources) ([]slsa.ProvenanceMaterial, err
 
 	for _, s := range srcs.Git {
 		out = append(out, slsa.ProvenanceMaterial{
-			URI:    s.URL,
-			Digest: digestSetForCommit(s.Commit),
+			URI: s.URL,
+			Digest: slsa.DigestSet{
+				"sha1": s.Commit,
+			},
 		})
 	}
 
@@ -59,51 +59,14 @@ func slsaMaterials(srcs provenancetypes.Sources) ([]slsa.ProvenanceMaterial, err
 	return out, nil
 }
 
-func digestSetForCommit(commit string) slsa.DigestSet {
-	dset := slsa.DigestSet{}
-	if len(commit) == 64 {
-		dset["sha256"] = commit
-	} else {
-		dset["sha1"] = commit
-	}
-	return dset
-}
-
 func findMaterial(srcs provenancetypes.Sources, uri string) (*slsa.ProvenanceMaterial, bool) {
-	// Git URLs in querystring format or subdir need to be converted to fragment format with only ref
-	gitRef, err := gitutil.ParseURL(uri)
-	if err == nil && gitRef != nil {
-		u := gitRef.Remote
-		var ref string
-		if gitRef.Opts != nil {
-			ref = gitRef.Opts.Ref
-		}
-		if len(gitRef.Query) > 0 {
-			for k, v := range gitRef.Query {
-				if len(v) == 0 {
-					continue
-				}
-				switch k {
-				case "ref":
-					ref = v[0]
-				case "branch":
-					ref = "refs/heads/" + v[0]
-				case "tag":
-					ref = "refs/tags/" + v[0]
-				}
-			}
-		}
-		if ref != "" {
-			u += "#" + ref
-		}
-		uri = u
-	}
-
 	for _, s := range srcs.Git {
 		if s.URL == uri {
 			return &slsa.ProvenanceMaterial{
-				URI:    s.URL,
-				Digest: digestSetForCommit(s.Commit),
+				URI: s.URL,
+				Digest: slsa.DigestSet{
+					"sha1": s.Commit,
+				},
 			}, true
 		}
 	}
@@ -127,16 +90,12 @@ func NewPredicate(c *Capture) (*provenancetypes.ProvenancePredicateSLSA02, error
 	}
 	inv := provenancetypes.ProvenanceInvocationSLSA02{}
 
-	args := maps.Clone(c.Args)
-
 	contextKey := "context"
-	if v, ok := args["contextkey"]; ok && v != "" {
+	if v, ok := c.Args["contextkey"]; ok && v != "" {
 		contextKey = v
-	} else if v, ok := c.Args["input:context"]; ok && v != "" {
-		contextKey = "input:context"
 	}
 
-	if v, ok := args[contextKey]; ok && v != "" {
+	if v, ok := c.Args[contextKey]; ok && v != "" {
 		if m, ok := findMaterial(c.Sources, v); ok {
 			inv.ConfigSource.URI = m.URI
 			inv.ConfigSource.Digest = m.Digest
@@ -144,21 +103,21 @@ func NewPredicate(c *Capture) (*provenancetypes.ProvenancePredicateSLSA02, error
 			inv.ConfigSource.URI = v
 		}
 		inv.ConfigSource.URI = urlutil.RedactCredentials(inv.ConfigSource.URI)
-		delete(args, contextKey)
+		delete(c.Args, contextKey)
 	}
 
-	if v, ok := args["filename"]; ok && v != "" {
+	if v, ok := c.Args["filename"]; ok && v != "" {
 		inv.ConfigSource.EntryPoint = v
-		delete(args, "filename")
+		delete(c.Args, "filename")
 	}
 
 	vcs := make(map[string]string)
-	for k, v := range args {
+	for k, v := range c.Args {
 		if strings.HasPrefix(k, "vcs:") {
 			if k == "vcs:source" {
 				v = urlutil.RedactCredentials(v)
 			}
-			delete(args, k)
+			delete(c.Args, k)
 			if v != "" {
 				vcs[strings.TrimPrefix(k, "vcs:")] = v
 			}
@@ -168,7 +127,7 @@ func NewPredicate(c *Capture) (*provenancetypes.ProvenancePredicateSLSA02, error
 	inv.Environment.Platform = platforms.Format(platforms.Normalize(platforms.DefaultSpec()))
 
 	inv.Parameters.Frontend = c.Frontend
-	inv.Parameters.Args = args
+	inv.Parameters.Args = c.Args
 
 	for _, s := range c.Secrets {
 		inv.Parameters.Secrets = append(inv.Parameters.Secrets, &provenancetypes.Secret{
@@ -198,7 +157,7 @@ func NewPredicate(c *Capture) (*provenancetypes.ProvenancePredicateSLSA02, error
 	pr := &provenancetypes.ProvenancePredicateSLSA02{
 		Invocation: inv,
 		ProvenancePredicate: slsa02.ProvenancePredicate{
-			BuildType: provenancetypes.BuildKitBuildType02,
+			BuildType: provenancetypes.BuildKitBuildType,
 			Materials: materials,
 		},
 		Metadata: &provenancetypes.ProvenanceMetadataSLSA02{

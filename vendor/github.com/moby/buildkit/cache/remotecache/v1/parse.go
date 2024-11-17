@@ -37,32 +37,23 @@ func parseRecord(cc CacheConfig, idx int, provider DescriptorProvider, t solver.
 		return r, nil
 	}
 
-	cache[idx] = nil
 	if idx < 0 || idx >= len(cc.Records) {
 		return nil, errors.Errorf("invalid record ID: %d", idx)
 	}
 	rec := cc.Records[idx]
 
-	links := make([][]solver.CacheLink, len(rec.Inputs))
-
+	r := t.Add(rec.Digest)
+	cache[idx] = nil
 	for i, inputs := range rec.Inputs {
-		if len(inputs) == 0 {
-			return nil, errors.Errorf("invalid empty input for record %d", idx)
-		}
-		links[i] = make([]solver.CacheLink, len(inputs))
-		for j, inp := range inputs {
+		for _, inp := range inputs {
 			src, err := parseRecord(cc, inp.LinkIndex, provider, t, cache)
 			if err != nil {
 				return nil, err
 			}
-			links[i][j] = solver.CacheLink{
-				Selector: inp.Selector,
-				Src:      src,
-			}
+			r.LinkFrom(src, i, inp.Selector)
 		}
 	}
 
-	results := make([]solver.CacheExportResult, 0, len(rec.Results))
 	for _, res := range rec.Results {
 		visited := map[int]struct{}{}
 		remote, err := getRemoteChain(cc.Layers, res.LayerIndex, provider, visited)
@@ -70,12 +61,10 @@ func parseRecord(cc CacheConfig, idx int, provider DescriptorProvider, t solver.
 			return nil, err
 		}
 		if remote != nil {
-			results = append(results, solver.CacheExportResult{
-				CreatedAt: res.CreatedAt,
-				Result:    remote,
-			})
+			r.AddResult("", 0, res.CreatedAt, remote)
 		}
 	}
+
 	for _, res := range rec.ChainedResults {
 		remote := &solver.Remote{}
 		mp := contentutil.NewMultiProvider(nil)
@@ -97,17 +86,10 @@ func parseRecord(cc CacheConfig, idx int, provider DescriptorProvider, t solver.
 		}
 		if remote != nil {
 			remote.Provider = mp
-			results = append(results, solver.CacheExportResult{
-				CreatedAt: res.CreatedAt,
-				Result:    remote,
-			})
+			r.AddResult("", 0, res.CreatedAt, remote)
 		}
 	}
 
-	r, _, err := t.Add(rec.Digest, links, results)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to add record %d", idx)
-	}
 	cache[idx] = r
 	return r, nil
 }

@@ -2,7 +2,6 @@ package control
 
 import (
 	"context"
-	stderrors "errors"
 	"fmt"
 	"runtime/trace"
 	"strconv"
@@ -14,6 +13,7 @@ import (
 	"github.com/containerd/containerd/v2/core/content"
 	"github.com/containerd/containerd/v2/plugins/services/content/contentserver"
 	"github.com/distribution/reference"
+	"github.com/hashicorp/go-multierror"
 	"github.com/mitchellh/hashstructure/v2"
 	controlapi "github.com/moby/buildkit/api/services/control"
 	apitypes "github.com/moby/buildkit/api/types"
@@ -74,7 +74,6 @@ type Opt struct {
 	HistoryConfig             *config.HistoryConfig
 	GarbageCollect            func(context.Context) error
 	GracefulStop              <-chan struct{}
-	ProvenanceEnv             map[string]any
 }
 
 type Controller struct { // TODO: ControlService
@@ -115,7 +114,6 @@ func NewController(opt Opt) (*Controller, error) {
 		SessionManager:   opt.SessionManager,
 		Entitlements:     opt.Entitlements,
 		HistoryQueue:     hq,
-		ProvenanceEnv:    opt.ProvenanceEnv,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create solver")
@@ -140,20 +138,17 @@ func NewController(opt Opt) (*Controller, error) {
 }
 
 func (c *Controller) Close() error {
-	var errs []error
-	if err := c.opt.HistoryDB.Close(); err != nil {
-		errs = append(errs, err)
-	}
+	rerr := c.opt.HistoryDB.Close()
 	if err := c.opt.WorkerController.Close(); err != nil {
-		errs = append(errs, err)
+		rerr = multierror.Append(rerr, err)
 	}
 	if err := c.opt.CacheStore.Close(); err != nil {
-		errs = append(errs, err)
+		rerr = multierror.Append(rerr, err)
 	}
 	if err := c.solver.Close(); err != nil {
-		errs = append(errs, err)
+		rerr = multierror.Append(rerr, err)
 	}
-	return stderrors.Join(errs...)
+	return rerr
 }
 
 func (c *Controller) Register(server *grpc.Server) {
@@ -526,7 +521,7 @@ func (c *Controller) Solve(ctx context.Context, req *controlapi.SolveRequest) (*
 				params[k] = v
 			}
 		}
-		procs = append(procs, proc.ProvenanceProcessor(slsaVersion, params, c.opt.ProvenanceEnv))
+		procs = append(procs, proc.ProvenanceProcessor(slsaVersion, params))
 	}
 
 	resp, err := c.solver.Solve(ctx, req.Ref, req.Session, frontend.SolveRequest{

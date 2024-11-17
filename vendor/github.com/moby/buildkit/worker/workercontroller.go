@@ -1,9 +1,8 @@
 package worker
 
 import (
-	stderrors "errors"
-
 	"github.com/containerd/containerd/v2/pkg/filters"
+	"github.com/hashicorp/go-multierror"
 	"github.com/moby/buildkit/cache"
 	"github.com/moby/buildkit/client"
 	"github.com/pkg/errors"
@@ -17,13 +16,13 @@ type Controller struct {
 }
 
 func (c *Controller) Close() error {
-	var errs []error
+	var rerr error
 	for _, w := range c.workers {
 		if err := w.Close(); err != nil {
-			errs = append(errs, err)
+			rerr = multierror.Append(rerr, err)
 		}
 	}
-	return stderrors.Join(errs...)
+	return rerr
 }
 
 // Add adds a local worker.

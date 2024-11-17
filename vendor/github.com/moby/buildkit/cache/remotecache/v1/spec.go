@@ -23,7 +23,7 @@ type LayerAnnotations struct {
 	MediaType string        `json:"mediaType,omitempty"`
 	DiffID    digest.Digest `json:"diffID,omitempty"`
 	Size      int64         `json:"size,omitempty"`
-	CreatedAt time.Time     `json:"createdAt"`
+	CreatedAt time.Time     `json:"createdAt,omitempty"`
 }
 
 type CacheRecord struct {
@@ -35,12 +35,12 @@ type CacheRecord struct {
 
 type CacheResult struct {
 	LayerIndex int       `json:"layer"`
-	CreatedAt  time.Time `json:"createdAt"`
+	CreatedAt  time.Time `json:"createdAt,omitempty"`
 }
 
 type ChainedResult struct {
 	LayerIndexes []int     `json:"layers"`
-	CreatedAt    time.Time `json:"createdAt"`
+	CreatedAt    time.Time `json:"createdAt,omitempty"`
 }
 
 type CacheInput struct {

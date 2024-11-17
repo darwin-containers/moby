@@ -47,17 +47,16 @@ type GitURL struct {
 	Path string
 	// User is the username/password to access the host
 	User *url.Userinfo
-	// Query is the query parameters for the URL
-	Query url.Values
 	// Opts can contain additional metadata
 	Opts *GitURLOpts
+
 	// Remote is a valid URL remote to pass into the Git CLI tooling (i.e.
 	// without the fragment metadata)
 	Remote string
 }
 
 // GitURLOpts is the buildkit-specific metadata extracted from the fragment
-// or the query of a remote URL.
+// of a remote URL.
 type GitURLOpts struct {
 	// Ref is the git reference
 	Ref string
@@ -87,11 +86,11 @@ func ParseURL(remote string) (*GitURL, error) {
 		if err != nil {
 			return nil, err
 		}
-		return FromURL(url)
+		return fromURL(url), nil
 	}
 
 	if url, err := sshutil.ParseSCPStyleURL(remote); err == nil {
-		return fromSCPStyleURL(url)
+		return fromSCPStyleURL(url), nil
 	}
 
 	return nil, ErrUnknownProtocol
@@ -106,40 +105,28 @@ func IsGitTransport(remote string) bool {
 	return sshutil.IsImplicitSSHTransport(remote)
 }
 
-func FromURL(url *url.URL) (*GitURL, error) {
+func fromURL(url *url.URL) *GitURL {
 	withoutOpts := *url
 	withoutOpts.Fragment = ""
-	withoutOpts.RawQuery = ""
-	q := url.Query()
-	if len(q) == 0 {
-		q = nil
-	}
 	return &GitURL{
 		Scheme: url.Scheme,
 		User:   url.User,
 		Host:   url.Host,
 		Path:   url.Path,
-		Query:  q,
 		Opts:   parseOpts(url.Fragment),
 		Remote: withoutOpts.String(),
-	}, nil
+	}
 }
 
-func fromSCPStyleURL(url *sshutil.SCPStyleURL) (*GitURL, error) {
+func fromSCPStyleURL(url *sshutil.SCPStyleURL) *GitURL {
 	withoutOpts := *url
 	withoutOpts.Fragment = ""
-	withoutOpts.Query = nil
-	q := url.Query
-	if len(q) == 0 {
-		q = nil
-	}
 	return &GitURL{
 		Scheme: SSHProtocol,
 		User:   url.User,
 		Host:   url.Host,
 		Path:   url.Path,
-		Query:  q,
 		Opts:   parseOpts(url.Fragment),
 		Remote: withoutOpts.String(),
-	}, nil
+	}
 }

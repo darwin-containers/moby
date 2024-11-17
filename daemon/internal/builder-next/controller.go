@@ -159,8 +159,7 @@ func newSnapshotterController(ctx context.Context, rt http.RoundTripper, opt Opt
 		opt.IdentityMapping,
 		opt.ApparmorProfile,
 		cdiManager,
-		opt.ContainerdAddress,
-		opt.ContainerdNamespace,
+		opt.ContainerdClient,
 	)
 	if err != nil {
 		return nil, err
@@ -350,8 +349,7 @@ func newGraphDriverController(ctx context.Context, rt http.RoundTripper, opt Opt
 		opt.IdentityMapping,
 		opt.ApparmorProfile,
 		cdiManager,
-		opt.ContainerdAddress,
-		opt.ContainerdNamespace,
+		opt.ContainerdClient,
 	)
 	if err != nil {
 		return nil, err

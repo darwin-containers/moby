@@ -296,7 +296,7 @@ func (ic *ImageWriter) Commit(ctx context.Context, inp *exporter.Source, session
 			}
 
 			var defaultSubjects []intoto.Subject
-			for name := range strings.SplitSeq(opts.ImageName, ",") {
+			for _, name := range strings.Split(opts.ImageName, ",") {
 				if name == "" {
 					continue
 				}
@@ -617,11 +617,7 @@ func (ic *ImageWriter) commitAttestationsManifest(ctx context.Context, opts *Ima
 
 	if ociArtifact {
 		mfst.ArtifactType = attestationManifestArtifactType
-		mfst.Subject = &ocispecs.Descriptor{
-			Digest:    target.Digest,
-			Size:      target.Size,
-			MediaType: target.MediaType,
-		}
+		mfst.Subject = &target
 	}
 
 	labels := map[string]string{

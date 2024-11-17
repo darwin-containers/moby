@@ -28,7 +28,6 @@ import (
 	"github.com/moby/buildkit/source"
 	srctypes "github.com/moby/buildkit/source/types"
 	"github.com/moby/buildkit/util/bklog"
-	"github.com/moby/buildkit/util/cachedigest"
 	"github.com/moby/buildkit/util/tracing"
 	"github.com/moby/buildkit/version"
 	digest "github.com/opencontainers/go-digest"
@@ -199,10 +198,7 @@ func (hs *httpSourceHandler) formatCacheKey(filename string, dgst digest.Digest,
 	if err != nil {
 		return dgst
 	}
-	if v, err := cachedigest.FromBytes(dt, cachedigest.TypeJSON); err == nil {
-		return v
-	}
-	return dgst
+	return digest.FromBytes(dt)
 }
 
 func (hs *httpSourceHandler) CacheKey(ctx context.Context, g session.Group, index int) (string, string, solver.CacheOpts, bool, error) {

@@ -1015,6 +1015,7 @@ func NewDaemon(ctx context.Context, config *config.Config, pluginStore *plugin.S
 		}).Info("Creating a containerd client")
 		d.containerdClient, err = containerd.New(
 			cfgStore.ContainerdAddr,
+			containerd.WithDefaultRuntime(config.DefaultRuntime),
 			containerd.WithDefaultNamespace(cfgStore.ContainerdNamespace),
 			containerd.WithDialOpts(gopts),
 			containerd.WithTimeout(connTimeout),
@@ -1421,6 +1422,10 @@ func NewDaemon(ctx context.Context, config *config.Config, pluginStore *plugin.S
 // DistributionServices returns services controlling daemon storage
 func (daemon *Daemon) DistributionServices() images.DistributionServices {
 	return daemon.imageService.DistributionServices()
+}
+
+func (daemon *Daemon) ContainerdClient() *containerd.Client {
+	return daemon.containerdClient
 }
 
 func (daemon *Daemon) waitForStartupDone() {

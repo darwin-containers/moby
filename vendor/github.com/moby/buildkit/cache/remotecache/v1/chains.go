@@ -2,15 +2,11 @@ package cacheimport
 
 import (
 	"context"
-	"encoding/binary"
-	"maps"
-	"slices"
 	"strings"
-	"unique"
+	"sync"
+	"time"
 
-	"github.com/cespare/xxhash/v2"
 	"github.com/containerd/containerd/v2/core/content"
-	cerrdefs "github.com/containerd/errdefs"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/solver"
 	digest "github.com/opencontainers/go-digest"
@@ -19,187 +15,72 @@ import (
 )
 
 func NewCacheChains() *CacheChains {
-	return &CacheChains{roots: map[digest.Digest]*item{}}
+	return &CacheChains{visited: map[any]struct{}{}}
 }
 
 type CacheChains struct {
-	roots map[digest.Digest]*item
+	items   []*item
+	visited map[any]struct{}
 }
 
 var _ solver.CacheExporterTarget = &CacheChains{}
 
-func (c *CacheChains) computeIDs() {
-	for it := range c.leaves() {
-		it.computeID()
-	}
-}
-
-func (c *CacheChains) leaves() map[*item]struct{} {
-	leafs := map[*item]struct{}{}
-	visited := map[*item]struct{}{}
-	for _, it := range c.roots {
-		it.walkChildren(func(i *item) error {
-			if len(i.children) == 0 {
-				leafs[i] = struct{}{}
-			}
-			return nil
-		}, visited)
-	}
-	return leafs
-}
-
-func (c *CacheChains) Add(dgst digest.Digest, deps [][]solver.CacheLink, results []solver.CacheExportResult) (solver.CacheExporterRecord, bool, error) {
+func (c *CacheChains) Add(dgst digest.Digest) solver.CacheExporterRecord {
 	if strings.HasPrefix(dgst.String(), "random:") {
-		return nil, false, nil
-	}
-	r := &item{
-		dgst:    dgst,
-		results: results,
-		cc:      c,
+		// random digests will be different *every* run - so we shouldn't cache
+		// it, since there's a zero chance this random digest collides again
+		return &nopRecord{}
 	}
 
-	if len(deps) == 0 {
-		if prev, ok := c.roots[dgst]; ok {
-			r = prev
-		}
-		for _, rr := range results {
-			r.addResult(rr)
-		}
-		c.roots[dgst] = r
-		return r, true, nil
-	}
-
-	matchDeps := make([]func() map[*item]struct{}, len(deps))
-	for i, dd := range deps {
-		if len(dd) == 0 {
-			return nil, false, errors.Errorf("empty dependency for %s", dgst)
-		}
-		type itemWithSelector struct {
-			Src      *item
-			Selector string
-		}
-		items := make([]itemWithSelector, len(dd))
-		for ii, d := range dd {
-			it, ok := d.Src.(*item)
-			if !ok {
-				return nil, false, errors.Errorf("invalid dependency type %T for %s", d.Src, dgst)
-			}
-			if it.cc != c {
-				return nil, false, errors.Errorf("dependency %s is not part of the same cache chain", it.dgst)
-			}
-			items[ii] = itemWithSelector{
-				Src:      it,
-				Selector: d.Selector,
-			}
-		}
-		matchDeps[i] = func() map[*item]struct{} {
-			candidates := map[*item]struct{}{}
-			for _, it := range items {
-				maps.Copy(candidates, it.Src.children[unique.Make(linkv2{
-					selector: it.Selector,
-					index:    i,
-					digest:   dgst,
-				})])
-			}
-			return candidates
-		}
-	}
-	items := IntersectAll(matchDeps)
-
-	if len(items) > 1 {
-		var main *item
-		for it := range items {
-			main = it
-			break
-		}
-		for it := range items {
-			if it == main {
-				continue
-			}
-			for l, m := range it.children {
-				if main.children == nil {
-					main.children = map[unique.Handle[linkv2]]map[*item]struct{}{}
-				}
-				if _, ok := main.children[l]; !ok {
-					main.children[l] = map[*item]struct{}{}
-				}
-				for ch := range m {
-					main.children[l][ch] = struct{}{}
-					for i, links := range ch.parents {
-						newlinks := map[link]struct{}{}
-						for l := range links {
-							if l.src == it {
-								l.src = main
-							}
-							newlinks[l] = struct{}{}
-						}
-						ch.parents[i] = newlinks
-					}
-				}
-			}
-			for _, rr := range it.results {
-				main.addResult(rr)
-			}
-		}
-		items = map[*item]struct{}{main: {}}
-	}
-
-	for it := range items {
-		r = it
-		for _, rr := range results {
-			r.addResult(rr)
-		}
-
-		// make sure that none of the deps are children of r
-		allChildren := map[*item]struct{}{}
-		if err := r.walkChildren(func(i *item) error {
-			allChildren[i] = struct{}{}
-			return nil
-		}, map[*item]struct{}{}); err != nil {
-			return nil, false, errors.Wrapf(err, "failed to walk children of %s", dgst)
-		}
-		for i, dd := range deps {
-			for j, d := range dd {
-				if _, ok := allChildren[d.Src.(*item)]; ok {
-					deps[i][j].Src = nil
-				}
-			}
-		}
-		break
-	}
-	for i, dd := range deps {
-		for _, d := range dd {
-			if d.Src == nil {
-				continue
-			}
-			d.Src.(*item).addChild(r, i, d.Selector)
-		}
-	}
-	return r, true, nil
+	it := &item{dgst: dgst, backlinks: map[*item]struct{}{}}
+	c.items = append(c.items, it)
+	return it
 }
 
-func IntersectAll[T comparable](
-	funcs []func() map[T]struct{},
-) map[T]struct{} {
-	if len(funcs) == 0 {
-		return nil
+func (c *CacheChains) Visit(target any) {
+	c.visited[target] = struct{}{}
+}
+
+func (c *CacheChains) Visited(target any) bool {
+	_, ok := c.visited[target]
+	return ok
+}
+
+func (c *CacheChains) normalize(ctx context.Context) error {
+	st := &normalizeState{
+		added: map[*item]*item{},
+		links: map[*item]map[nlink]map[digest.Digest]struct{}{},
+		byKey: map[digest.Digest]*item{},
 	}
 
-	intersection := funcs[0]()
-
-	for _, f := range funcs[1:] {
-		next := f()
-		for k := range intersection {
-			if _, ok := next[k]; !ok {
-				delete(intersection, k)
-			}
+	validated := make([]*item, 0, len(c.items))
+	for _, it := range c.items {
+		it.backlinksMu.Lock()
+		it.validate()
+		it.backlinksMu.Unlock()
+	}
+	for _, it := range c.items {
+		if !it.invalid {
+			validated = append(validated, it)
 		}
-		if len(intersection) == 0 {
-			return nil
+	}
+	c.items = validated
+
+	for _, it := range c.items {
+		_, err := normalizeItem(it, st)
+		if err != nil {
+			return err
 		}
 	}
 
-	return intersection
+	st.removeLoops(ctx)
+
+	items := make([]*item, 0, len(st.byKey))
+	for _, it := range st.byKey {
+		items = append(items, it)
+	}
+	c.items = items
+	return nil
 }
 
 // Marshal converts the cache chains structure into a cache config and a
@@ -209,13 +90,17 @@ func IntersectAll[T comparable](
 // consistent digest (since cache configs are typically uploaded and stored in
 // content-addressable OCI registries).
 func (c *CacheChains) Marshal(ctx context.Context) (*CacheConfig, DescriptorProvider, error) {
+	if err := c.normalize(ctx); err != nil {
+		return nil, nil, err
+	}
+
 	st := &marshalState{
 		chainsByID:    map[string]int{},
 		descriptors:   DescriptorProvider{},
 		recordsByItem: map[*item]int{},
 	}
 
-	for it := range c.leaves() {
+	for _, it := range c.items {
 		if err := marshalItem(ctx, it, st); err != nil {
 			return nil, nil, err
 		}
@@ -247,7 +132,7 @@ func (p DescriptorProviderPair) Info(ctx context.Context, dgst digest.Digest) (c
 		return p.InfoProvider.Info(ctx, dgst)
 	}
 	if dgst != p.Descriptor.Digest {
-		return content.Info{}, errors.Wrapf(cerrdefs.ErrNotFound, "blob %s", dgst)
+		return content.Info{}, errors.Errorf("content not found %s", dgst)
 	}
 	return content.Info{
 		Digest: p.Descriptor.Digest,
@@ -275,33 +160,34 @@ func (p DescriptorProviderPair) SnapshotLabels(descs []ocispecs.Descriptor, inde
 	return nil
 }
 
-type linkv2 struct {
-	selector string
-	index    int
-	digest   digest.Digest
-}
-
 // item is an implementation of a record in the cache chain. After validation,
 // normalization and marshalling into the cache config, the item results form
 // into the "layers", while the digests and the links form into the "records".
 type item struct {
-	solver.CacheExporterRecordBase
-
-	id string
-
 	// dgst is the unique identifier for each record.
 	// This *roughly* corresponds to an edge (vertex cachekey + index) in the
 	// solver - however, a single vertex can produce multiple unique cache keys
 	// (e.g. fast/slow), so it's a one-to-many relation.
 	dgst digest.Digest
 
-	children map[unique.Handle[linkv2]]map[*item]struct{}
+	// links are what connect records to each other (with an optional selector),
+	// organized by input index (which correspond to vertex inputs).
+	// We can have multiple links for each index, since *any* of these could be
+	// used to get to this item (e.g. we could retrieve by fast/slow key).
+	links []map[link]struct{}
 
-	parents []map[link]struct{}
+	// backlinks are the inverse of a link - these don't actually get directly
+	// exported, but they're internally used to help efficiently navigate the
+	// graph.
+	backlinks   map[*item]struct{}
+	backlinksMu sync.Mutex
 
-	results []solver.CacheExportResult
+	// result is the result of computing the edge - this is the target of the
+	// data we actually want to store in the cache chain.
+	result     *solver.Remote
+	resultTime time.Time
 
-	cc *CacheChains
+	invalid bool
 }
 
 // link is a pointer to an item, with an optional selector.
@@ -310,110 +196,88 @@ type link struct {
 	selector string
 }
 
-func (c *item) addChild(src *item, index int, selector string) {
-	if c.children == nil {
-		c.children = map[unique.Handle[linkv2]]map[*item]struct{}{}
+func (c *item) removeLink(src *item) bool {
+	found := false
+	for idx := range c.links {
+		for l := range c.links[idx] {
+			if l.src == src {
+				delete(c.links[idx], l)
+				found = true
+			}
+		}
 	}
-	h := unique.Make(linkv2{
-		selector: selector,
-		index:    index,
-		digest:   src.dgst,
-	})
-	m, ok := c.children[h]
+	for idx := range c.links {
+		if len(c.links[idx]) == 0 {
+			c.links = nil
+			break
+		}
+	}
+	return found
+}
+
+func (c *item) AddResult(_ digest.Digest, _ int, createdAt time.Time, result *solver.Remote) {
+	c.resultTime = createdAt
+	c.result = result
+}
+
+func (c *item) LinkFrom(rec solver.CacheExporterRecord, index int, selector string) {
+	src, ok := rec.(*item)
 	if !ok {
-		m = map[*item]struct{}{}
-		c.children[h] = m
-	}
-	if _, ok := m[src]; ok {
-		return
-	}
-	m[src] = struct{}{}
-
-	for index >= len(src.parents) {
-		src.parents = append(src.parents, map[link]struct{}{})
-	}
-	src.parents[index][link{src: c, selector: selector}] = struct{}{}
-}
-
-func (c *item) addResult(r solver.CacheExportResult) {
-	var exists bool
-	for _, rr := range c.results {
-		if !rr.CreatedAt.Equal(r.CreatedAt) {
-			continue
-		}
-		if len(rr.Result.Descriptors) != len(r.Result.Descriptors) {
-			continue
-		}
-		for i, d := range rr.Result.Descriptors {
-			if d.Digest != r.Result.Descriptors[i].Digest {
-				continue
-			}
-		}
-		exists = true
-		break
-	}
-	if !exists {
-		c.results = append(c.results, r)
-	}
-}
-
-func (c *item) computeID() {
-	if c.id != "" {
 		return
 	}
 
-	if len(c.parents) == 0 {
-		c.id = c.dgst.String()
+	for index >= len(c.links) {
+		c.links = append(c.links, map[link]struct{}{})
+	}
+
+	c.links[index][link{src: src, selector: selector}] = struct{}{}
+	src.backlinksMu.Lock()
+	src.backlinks[c] = struct{}{}
+	src.backlinksMu.Unlock()
+}
+
+// validate checks if an item is valid (i.e. each index has at least one link)
+// and marks it as such.
+//
+// Essentially, if an index has no links, it means that this cache record is
+// unreachable by the cache importer, so we should remove it. Once we've marked
+// an item as invalid, we remove it from it's backlinks and check it's
+// validity again - since now this linked item may be unreachable too.
+func (c *item) validate() {
+	if c.invalid {
+		// early exit, if the item is already invalid, we've already gone
+		// through the backlinks
 		return
 	}
 
-	// deterministic ID
-	h := xxhash.New()
-	h.Write([]byte(c.dgst.String()))
-	h.Write([]byte{0})
-
-	for idx, m := range c.parents {
-		binary.Write(h, binary.LittleEndian, uint32(idx))
-		h.Write([]byte{0})
-		for l := range m {
-			if l.src.id == "" {
-				l.src.computeID()
-			}
-			h.Write([]byte(l.src.id))
-			h.Write([]byte{0})
-			h.Write([]byte(l.selector))
-			h.Write([]byte{0})
+	for _, m := range c.links {
+		// if an index has no links, there's no way to access this record, so
+		// mark it as invalid
+		if len(m) == 0 {
+			c.invalid = true
+			break
 		}
 	}
-	c.id = string(h.Sum(nil))
-}
 
-func (c *item) bestResult() *solver.CacheExportResult {
-	if len(c.results) == 0 {
-		return nil
-	}
-	slices.SortFunc(c.results, func(a, b solver.CacheExportResult) int {
-		return b.CreatedAt.Compare(a.CreatedAt)
-	})
-	return &c.results[0]
-}
+	if c.invalid {
+		for bl := range c.backlinks {
+			// remove ourselves from the backlinked item
+			changed := false
+			for _, m := range bl.links {
+				for l := range m {
+					if l.src == c {
+						delete(m, l)
+						changed = true
+					}
+				}
+			}
 
-func (c *item) walkChildren(fn func(i *item) error, visited map[*item]struct{}) error {
-	if _, ok := visited[c]; ok {
-		return nil
-	}
-	visited[c] = struct{}{}
-	if err := fn(c); err != nil {
-		return err
-	}
-	for _, ch := range c.children {
-		for it := range ch {
-			if err := it.walkChildren(fn, visited); err != nil {
-				return err
+			// if we've removed ourselves, we need to check it again
+			if changed {
+				bl.validate()
 			}
 		}
 	}
-	return nil
 }
 
 func (c *item) walkAllResults(fn func(i *item) error, visited map[*item]struct{}) error {
@@ -424,7 +288,7 @@ func (c *item) walkAllResults(fn func(i *item) error, visited map[*item]struct{}
 	if err := fn(c); err != nil {
 		return err
 	}
-	for _, links := range c.parents {
+	for _, links := range c.links {
 		for l := range links {
 			if err := l.src.walkAllResults(fn, visited); err != nil {
 				return err
@@ -432,4 +296,14 @@ func (c *item) walkAllResults(fn func(i *item) error, visited map[*item]struct{}
 		}
 	}
 	return nil
+}
+
+// nopRecord is used to discard cache results that we're not interested in storing.
+type nopRecord struct {
+}
+
+func (c *nopRecord) AddResult(_ digest.Digest, _ int, createdAt time.Time, result *solver.Remote) {
+}
+
+func (c *nopRecord) LinkFrom(rec solver.CacheExporterRecord, index int, selector string) {
 }

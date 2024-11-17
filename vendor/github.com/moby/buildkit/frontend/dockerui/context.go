@@ -9,9 +9,9 @@ import (
 	"strconv"
 
 	"github.com/moby/buildkit/client/llb"
-	"github.com/moby/buildkit/frontend/dockerfile/dfgitutil"
 	"github.com/moby/buildkit/frontend/gateway/client"
 	gwpb "github.com/moby/buildkit/frontend/gateway/pb"
+	"github.com/moby/buildkit/util/gitutil"
 	"github.com/pkg/errors"
 )
 
@@ -69,14 +69,11 @@ func (bc *Client) initContext(ctx context.Context) (*buildContext, error) {
 		bctx.dockerfileLocalName = v
 	}
 
-	var keepGit *bool
+	keepGit := false
 	if v, err := strconv.ParseBool(opts[keyContextKeepGitDirArg]); err == nil {
-		keepGit = &v
+		keepGit = v
 	}
-	if st, ok, err := DetectGitContext(opts[localNameContext], keepGit); ok {
-		if err != nil {
-			return nil, err
-		}
+	if st, ok := DetectGitContext(opts[localNameContext], keepGit); ok {
 		bctx.context = st
 		bctx.dockerfile = st
 	} else if st, filename, ok := DetectHTTPContext(opts[localNameContext]); ok {
@@ -143,33 +140,22 @@ func (bc *Client) initContext(ctx context.Context) (*buildContext, error) {
 	return bctx, nil
 }
 
-func DetectGitContext(ref string, keepGit *bool) (*llb.State, bool, error) {
-	g, isGit, err := dfgitutil.ParseGitRef(ref)
+func DetectGitContext(ref string, keepGit bool) (*llb.State, bool) {
+	g, err := gitutil.ParseGitRef(ref)
 	if err != nil {
-		return nil, isGit, err
+		return nil, false
 	}
-	gitOpts := []llb.GitOption{
-		llb.GitRef(g.Ref),
-		WithInternalName("load git source " + ref),
-	}
-	if g.KeepGitDir != nil && *g.KeepGitDir {
-		gitOpts = append(gitOpts, llb.KeepGitDir())
-	}
-	if keepGit != nil && *keepGit {
-		gitOpts = append(gitOpts, llb.KeepGitDir())
-	}
+	commit := g.Commit
 	if g.SubDir != "" {
-		gitOpts = append(gitOpts, llb.GitSubDir(g.SubDir))
+		commit += ":" + g.SubDir
 	}
-	if g.Checksum != "" {
-		gitOpts = append(gitOpts, llb.GitChecksum(g.Checksum))
-	}
-	if g.Submodules != nil && !*g.Submodules {
-		gitOpts = append(gitOpts, llb.GitSkipSubmodules())
+	gitOpts := []llb.GitOption{WithInternalName("load git source " + ref)}
+	if keepGit {
+		gitOpts = append(gitOpts, llb.KeepGitDir())
 	}
 
-	st := llb.Git(g.Remote, "", gitOpts...)
-	return &st, true, nil
+	st := llb.Git(g.Remote, commit, gitOpts...)
+	return &st, true
 }
 
 func DetectHTTPContext(ref string) (*llb.State, string, bool) {

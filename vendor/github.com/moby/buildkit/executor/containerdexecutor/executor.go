@@ -40,7 +40,6 @@ type containerdExecutor struct {
 	selinux          bool
 	traceSocket      string
 	rootless         bool
-	hypervIsolation  bool
 	runtime          *RuntimeInfo
 	cdiManager       *cdidevices.Manager
 }
@@ -74,7 +73,6 @@ type ExecutorOptions struct {
 	Selinux          bool
 	TraceSocket      string
 	Rootless         bool
-	HyperVIsolation  bool
 	Runtime          *RuntimeInfo
 	CDIManager       *cdidevices.Manager
 }
@@ -96,7 +94,6 @@ func New(executorOpts ExecutorOptions) executor.Executor {
 		selinux:          executorOpts.Selinux,
 		traceSocket:      executorOpts.TraceSocket,
 		rootless:         executorOpts.Rootless,
-		hypervIsolation:  executorOpts.HyperVIsolation,
 		runtime:          executorOpts.Runtime,
 		cdiManager:       executorOpts.CDIManager,
 	}

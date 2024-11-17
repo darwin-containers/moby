@@ -422,6 +422,7 @@ func initBuildkit(ctx context.Context, d *daemon.Daemon, cdiCache *cdi.Cache) (_
 		ApparmorProfile:     daemon.DefaultApparmorProfile(),
 		UseSnapshotter:      d.UsesSnapshotter(),
 		Snapshotter:         d.ImageService().StorageDriver(),
+		ContainerdClient:    d.ContainerdClient(),
 		ContainerdAddress:   cfg.ContainerdAddr,
 		ContainerdNamespace: cfg.ContainerdNamespace,
 		Callbacks: exporter.BuildkitCallbacks{

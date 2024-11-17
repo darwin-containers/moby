@@ -3,6 +3,7 @@ package contenthash
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"io"
 	"os"
 	"path"
@@ -17,7 +18,6 @@ import (
 	"github.com/moby/buildkit/cache"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/snapshot"
-	"github.com/moby/buildkit/util/cachedigest"
 	"github.com/moby/locker"
 	"github.com/moby/patternmatcher"
 	digest "github.com/opencontainers/go-digest"
@@ -92,7 +92,6 @@ type includedPath struct {
 	included         bool
 	includeMatchInfo patternmatcher.MatchInfo
 	excludeMatchInfo patternmatcher.MatchInfo
-	followLinks      bool
 }
 
 type cacheManager struct {
@@ -432,16 +431,17 @@ func (cc *cacheContext) Checksum(ctx context.Context, mountable cache.Mountable,
 		return "", err
 	}
 
-	for i, w := range includedPaths {
-		if w.followLinks && w.record.Type == CacheRecordTypeSymlink {
-			dgst, err := cc.lazyChecksum(ctx, m, w.path, opts.FollowLinks)
-			if err != nil {
-				return "", err
+	if opts.FollowLinks {
+		for i, w := range includedPaths {
+			if w.record.Type == CacheRecordTypeSymlink {
+				dgst, err := cc.lazyChecksum(ctx, m, w.path, opts.FollowLinks)
+				if err != nil {
+					return "", err
+				}
+				includedPaths[i].record = &CacheRecord{Digest: string(dgst)}
 			}
-			includedPaths[i].record = &CacheRecord{Digest: string(dgst)}
 		}
 	}
-
 	if len(includedPaths) == 0 {
 		return digest.FromBytes([]byte{}), nil
 	}
@@ -450,15 +450,15 @@ func (cc *cacheContext) Checksum(ctx context.Context, mountable cache.Mountable,
 		return digest.Digest(includedPaths[0].record.Digest), nil
 	}
 
-	h := cachedigest.NewHash(cachedigest.TypeFileList)
+	digester := digest.Canonical.Digester()
 	for i, w := range includedPaths {
 		if i != 0 {
-			h.Write([]byte{0})
+			digester.Hash().Write([]byte{0})
 		}
-		h.Write([]byte(path.Base(w.path)))
-		h.Write([]byte(w.record.Digest))
+		digester.Hash().Write([]byte(path.Base(w.path)))
+		digester.Hash().Write([]byte(w.record.Digest))
 	}
-	return h.Sum(), nil
+	return digester.Digest(), nil
 }
 
 func (cc *cacheContext) includedPaths(ctx context.Context, m *mount, p string, opts ChecksumOpts) ([]*includedPath, error) {
@@ -597,10 +597,6 @@ func (cc *cacheContext) includedPaths(ctx context.Context, m *mount, p string, o
 		}
 
 		maybeIncludedPath := &includedPath{path: fn}
-		if parentDir == nil && opts.FollowLinks {
-			maybeIncludedPath.followLinks = true
-		}
-
 		var shouldInclude bool
 		if opts.Wildcard {
 			if p != "" && (lastMatchedDir == "" || !strings.HasPrefix(fn, lastMatchedDir+"/")) {
@@ -885,7 +881,7 @@ func (cc *cacheContext) checksum(ctx context.Context, root *iradix.Node[*CacheRe
 
 	switch cr.Type {
 	case CacheRecordTypeDir:
-		h := cachedigest.NewHash(cachedigest.TypeFileList)
+		h := sha256.New()
 		next := append(k, 0)
 		iter := root.Iterator()
 		iter.SeekLowerBound(append(slices.Clone(next), 0))
@@ -910,7 +906,7 @@ func (cc *cacheContext) checksum(ctx context.Context, root *iradix.Node[*CacheRe
 			}
 			subk, _, ok = iter.Next()
 		}
-		dgst = h.Sum()
+		dgst = digest.NewDigest(digest.SHA256, h)
 
 	default:
 		p := convertKeyToPath(bytes.TrimSuffix(k, []byte{0}))

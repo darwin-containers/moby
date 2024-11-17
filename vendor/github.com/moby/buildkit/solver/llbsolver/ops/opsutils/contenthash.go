@@ -8,7 +8,6 @@ import (
 	"github.com/moby/buildkit/cache/contenthash"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/solver"
-	"github.com/moby/buildkit/util/cachedigest"
 	"github.com/moby/buildkit/worker"
 	digest "github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
@@ -67,6 +66,6 @@ func NewContentHashFunc(selectors []Selector) solver.ResultBasedCacheFunc {
 			return "", err
 		}
 
-		return cachedigest.FromBytes(bytes.Join(dgsts, []byte{0}), cachedigest.TypeDigestList)
+		return digest.FromBytes(bytes.Join(dgsts, []byte{0})), nil
 	}
 }

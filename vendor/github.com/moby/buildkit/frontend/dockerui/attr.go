@@ -17,7 +17,7 @@ import (
 
 func parsePlatforms(v string) ([]ocispecs.Platform, error) {
 	var pp []ocispecs.Platform
-	for v := range strings.SplitSeq(v, ",") {
+	for _, v := range strings.Split(v, ",") {
 		p, err := platforms.Parse(v)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to parse target platform %s", v)
