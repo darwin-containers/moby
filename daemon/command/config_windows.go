@@ -15,7 +15,3 @@ func installConfigFlags(conf *config.Config, flags *pflag.FlagSet) {
 	flags.StringVarP(&conf.BridgeConfig.Iface, "bridge", "b", "", "Attach containers to a virtual switch")
 	flags.StringVarP(&conf.SocketGroup, "group", "G", "", "Users or groups that can access the named pipe")
 }
-
-// configureCertsDir configures registry.CertsDir() depending on if the daemon
-// is running in rootless mode or not. On Windows, it is a no-op.
-func configureCertsDir() {}

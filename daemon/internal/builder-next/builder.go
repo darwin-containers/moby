@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	ctd "github.com/containerd/containerd/v2/client"
 	"github.com/containerd/containerd/v2/core/remotes/docker"
 	"github.com/containerd/platforms"
 	controlapi "github.com/moby/buildkit/api/services/control"
@@ -96,6 +97,7 @@ type Opt struct {
 	ApparmorProfile     string
 	UseSnapshotter      bool
 	Snapshotter         string
+	ContainerdClient    *ctd.Client
 	ContainerdAddress   string
 	ContainerdNamespace string
 	HyperVIsolation     bool
